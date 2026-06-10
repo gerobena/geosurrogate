@@ -31,7 +31,10 @@ pytestmark = pytest.mark.e2e
 def test_slope_2d_short_run(tmp_path):
     cfg = load_case_config("slope_2d")
     data = cfg.model_dump(mode="json")
-    doe_total = data["doe"]["n_lhs"] + data["doe"]["n_pem"]
+    if data["doe"]["strategy"] == "factorial_3":
+        doe_total = 3 ** len(data["variables"])
+    else:
+        doe_total = data["doe"]["n_lhs"] + data["doe"]["n_pem"]
     data["active_learning"]["budget_total_sims"] = doe_total + 3
     data["active_learning"]["validation_grid"]["n"] = 800
     data["surrogate"]["mcmc"] = {"nmcmc": 800, "burn": 250, "thin": 2}

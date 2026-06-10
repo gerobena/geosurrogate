@@ -77,15 +77,15 @@ def _check_pause_and_budget(project: Project, n_ok: int) -> None:
 def _phase_doe(project: Project, solver) -> None:
     cfg = project.config
     ds = project.load_dataset()
-    target = cfg.doe.total
+    X_design, labels = doe.design(cfg.doe.strategy, cfg.doe.n_lhs, cfg.doe.n_pem,
+                                  cfg.bounds(), cfg.doe.seed)
+    target = len(X_design)
     if len(ds) >= target:
         return
     project.write_state(phase="doe")
     project.append_event("phase_change", phase="doe", target=target, done=len(ds))
-    project.log(f"DOE phase: {target} points, {len(ds)} already simulated")
+    project.log(f"DOE phase ({cfg.doe.strategy}): {target} points, {len(ds)} already simulated")
 
-    X_design, labels = doe.design(cfg.doe.strategy, cfg.doe.n_lhs, cfg.doe.n_pem,
-                                  cfg.bounds(), cfg.doe.seed)
     remaining = X_design[len(ds):]
     rem_labels = labels[len(ds):]
 

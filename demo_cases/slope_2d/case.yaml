@@ -21,10 +21,11 @@ variables:
     property: friction_angle
     training_bounds: [25.0, 34.0]
     distribution: {family: normal, mean: 30.0, std: 3.0, truncate: [25.0, 34.0]}
+# factorial_3 = 3^D equispaced grid (corners, edge midpoints, centre): 9 points
+# in 2D, reproducing the original TFM Case-1 design exactly. Low-D choice only;
+# 4D+ cases keep hybrid_lhs_pem (3^D explodes with dimensionality).
 doe:
-  strategy: hybrid_lhs_pem
-  n_lhs: 8
-  n_pem: 4
+  strategy: factorial_3
   seed: 42
 active_learning:
   acquisition: alc

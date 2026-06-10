@@ -46,6 +46,16 @@ def pem_corners(bounds: Bounds) -> np.ndarray:
     return np.array(list(itertools.product(*[(lo, hi) for lo, hi in bounds])), dtype=float)
 
 
+def factorial(bounds: Bounds, levels: int = 3) -> np.ndarray:
+    """Full factorial grid with `levels` equispaced levels per dimension —
+    for levels=3: corners, edge/face midpoints and centre. Size levels^D,
+    so it is only sensible in low dimensionality; the hybrid strategy
+    exists precisely because this explodes beyond ~3D. Reproduces the
+    original TFM Case-1 design (3x3 grid) exactly."""
+    axes = [np.linspace(lo, hi, levels) for lo, hi in bounds]
+    return np.array(list(itertools.product(*axes)), dtype=float)
+
+
 def pem_kmeans(n: int, bounds: Bounds, seed: int) -> np.ndarray:
     """Representative subset of the 2^D corners via K-Means on the unit cube
     (ported from the TFM hybrid DoE generator). Returns all corners when 2^D <= n."""
@@ -80,6 +90,12 @@ def design(strategy: str, n_lhs: int, n_pem: int, bounds: Bounds, seed: int) -> 
         X_p = pem_kmeans(n_pem, bounds, seed)
         X = np.vstack([X_l, X_p])
         labels = ["lhs_maximin"] * len(X_l) + ["pem"] * len(X_p)
+    elif strategy == "factorial_3":
+        if len(bounds) > 5:
+            raise ValueError("factorial_3 grows as 3^D and is impractical above "
+                             "5 dimensions; use hybrid_lhs_pem for high-D designs")
+        X = factorial(bounds, levels=3)
+        labels = ["factorial"] * len(X)
     else:
         raise ValueError(f"unknown DoE strategy: {strategy}")
     rng = np.random.default_rng(seed)

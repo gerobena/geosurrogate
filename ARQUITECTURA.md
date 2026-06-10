@@ -115,7 +115,7 @@ geosurrogate/
 | `config` | Validar y tipar `project.yaml` (pydantic); valores por defecto sensatos | constantes de cabecera de ~20 scripts |
 | `project` | Ciclo de vida del proyecto-carpeta; escritura atómica; eventos | gestión manual de carpetas |
 | `solvers.rs2` | Abrir modelo, listar materiales, asignar (c, φ) **por nombre**, calcular, extraer SRF, dibujar geometría; gestión de puertos/procesos propia (sin `taskkill` global); reintentos | `Ingest_from_excel_*`, `orquestador_*` (mitad RS2), `Tharsis_extract_malla` (know-how de malla) |
-| `doe` | LHS/Maximin/PEM/híbrido N-dimensional con semillas explícitas | `generar_doe_*`, `LHS_sampling` |
+| `doe` | LHS/Maximin/PEM/híbrido/factorial 3^D, N-dimensional con semillas explícitas | `generar_doe_*`, `LHS_sampling` |
 | `surrogate.r_bridge` | Una llamada limpia a R: ajustar GP + predecir + ALC; errores tipados; log | `acquisition_*.R`, `*_slave*.R` (×16 → 1) |
 | `activelearning` | Bucle DoE→fit→ALC→FEM→append→convergencia; reanudable; presupuesto y tolerancia | `orquestador_*` (mitad bucle) |
 | `validation` | LOOCV, curva K-S vs n, validación masiva; devuelve métricas+figuras como objetos | `validar_loocv_*`, `analisis_convergencia_ks_*`, `validacion_masiva_*` |
@@ -186,7 +186,7 @@ variables:
     training_bounds: [42.1, 50.2]
     distribution: {family: normal, mean: 46.0, std: 1.3}
 doe:
-  strategy: hybrid_lhs_pem       # lhs | lhs_maximin | pem | hybrid_lhs_pem
+  strategy: hybrid_lhs_pem       # lhs | lhs_maximin | pem | hybrid_lhs_pem | factorial_3
   n_lhs: 40
   n_pem: 40
   seed: 42
@@ -334,7 +334,8 @@ Python ≥ 3.11 · `pydantic` v2, `pandas` + `pyarrow`, `scipy`, `scikit-learn`,
 2. **Nombre:** `geosurrogate`, confirmado.
 3. **Idioma UI:** **conmutable EN/ES desde el día 1** mediante diccionarios de traducción (`app/i18n/en.json`, `app/i18n/es.json` + helper `t(key)` y selector en la barra lateral). Idioma por defecto: inglés. El coste es bajo si se construye así desde el principio; lo caro es retrofitarlo. Núcleo, CLI y logs permanecen en inglés.
 4. **Licencia y visibilidad:** repo **privado** durante la construcción; decisión open-core vs escaparate se pospone a F5.
-5. **Umbral de PoF:** configurable por proyecto (`exploitation.failure_threshold`, por defecto 1,0).
+5. **Umbral de PoF:** configurable por proyecto (`exploitation.failure_threshold`, por defecto 1,0; 1,3 en el caso demo 4D para una PoF no nula).
+6. **Estrategia de DoE por dimensionalidad** (10-06-2026): `factorial_3` (malla 3^D equiespaciada: esquinas + puntos medios + centro) para los casos de baja dimensión (D ≤ 3; en 2D reproduce exactamente los 9 puntos del Caso 1 del TFM y converge en menos simulaciones que el híbrido); `hybrid_lhs_pem` para D ≥ 4, donde 3^D se vuelve inviable. La estrategia se elige por proyecto en `doe.strategy`; guarda de seguridad: `factorial_3` rechaza D > 5.
 
 ## 14. Plan de construcción por fases
 

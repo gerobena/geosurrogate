@@ -84,22 +84,18 @@ class SolverConfig(BaseModel):
 
 
 class DoEConfig(BaseModel):
-    strategy: Literal["lhs", "lhs_maximin", "pem", "hybrid_lhs_pem"] = "hybrid_lhs_pem"
+    strategy: Literal["lhs", "lhs_maximin", "pem", "hybrid_lhs_pem", "factorial_3"] = "hybrid_lhs_pem"
     n_lhs: int = Field(default=40, ge=0)
     n_pem: int = Field(default=40, ge=0)
     seed: int = 42
 
-    @property
-    def total(self) -> int:
-        if self.strategy in ("lhs", "lhs_maximin"):
-            return self.n_lhs
-        if self.strategy == "pem":
-            return self.n_pem
-        return self.n_lhs + self.n_pem
-
     @model_validator(mode="after")
     def _check_total(self) -> "DoEConfig":
-        if self.total < 3:
+        if self.strategy == "factorial_3":
+            return self  # design size is 3^D, resolved at design time from the variable count
+        total = self.n_lhs if self.strategy in ("lhs", "lhs_maximin") else (
+            self.n_pem if self.strategy == "pem" else self.n_lhs + self.n_pem)
+        if total < 3:
             raise ValueError("initial design needs at least 3 points")
         return self
 

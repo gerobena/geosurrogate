@@ -13,7 +13,7 @@ cases:
     source: "Rocscience 'Embankment' tutorial model; SRF computed with RS2 (TFM, 2026)"
 planned:
   embankment_3d:
-    note: "3 selected variables over Embankment.fez; dataset to be generated with geosurrogate itself in phase F4 (dogfooding)"
+    note: "3 selected variables over Embankment.fez; dataset to be generated with geosurrogate itself in phase F4 (dogfooding); planned DoE: factorial_3 (27 points)"
   cliff_6d:
     note: "deferred - real-project model, provenance decision pending"
   cliff_8d:
