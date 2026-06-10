@@ -43,6 +43,14 @@ class Distribution(BaseModel):
             raise ValueError("truncate must be (low, high) with low < high")
         return self
 
+    def central_value(self) -> float:
+        """Representative central value (used e.g. for smoke-test simulations)."""
+        if self.family in ("normal", "lognormal"):
+            return float(self.mean)
+        if self.family == "uniform":
+            return (self.low + self.high) / 2
+        return float(self.mode)
+
 
 class VariableSpec(BaseModel):
     id: str = Field(pattern=r"^[a-z][a-z0-9_]*$")
@@ -69,6 +77,11 @@ class SolverConfig(BaseModel):
     model_file: Path | None = None
     demo_case: str | None = None
     rscript_path: Path = Path(r"C:\Program Files\R\R-4.5.3\bin\Rscript.exe")
+    # RS2 location: by default RS2Scripting auto-detects the most recent RS2
+    # installation via the Windows registry. These overrides are only needed
+    # on machines with non-standard installs or multiple RS2 versions.
+    rs2_modeler_executable: Path | None = None
+    rs2_interpreter_executable: Path | None = None
     ports: PortsConfig = PortsConfig()
     timeout_s: int = Field(default=1800, gt=0)
     fem_retention: Literal["keep_all", "keep_failed", "keep_none"] = "keep_all"

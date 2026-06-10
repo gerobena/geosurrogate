@@ -24,6 +24,7 @@ class CaseResult:
     status: CaseStatus
     elapsed_s: float
     fem_file: Path | None = None
+    message: str | None = None  # failure detail for diagnostics
 
 
 @runtime_checkable

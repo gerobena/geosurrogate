@@ -1,0 +1,59 @@
+# Real-mode project: Embankment tutorial model with 3 selected variables (3D).
+# Demonstrates that dimensionality emerges from variable selection: the friction
+# angle of 'sand' is NOT a variable and stays at the model's base value.
+# VERIFIED via `geosurrogate check` (11-06-2026): base values are embankment
+# c=100, phi=25 and sand c=0, phi=35 - i.e. the means of the TFM Case-2
+# distributions, so the unselected phi stays at its distribution mean.
+#
+# Workflow:
+#   geosurrogate new examples\embankment_3d.yaml -w runs\embankment_3d
+#   geosurrogate check runs\embankment_3d --simulate
+#   geosurrogate run runs\embankment_3d
+project:
+  name: "Embankment - 3 variables (3D, real RS2)"
+  schema_version: 1
+solver:
+  type: rs2
+  model_file: ../models/Embankment.fez   # resolved relative to this file by `geosurrogate new`
+  rscript_path: "C:/Program Files/R/R-4.5.3/bin/Rscript.exe"
+  ports: {modeler: 60054, interpreter: 60055}
+  timeout_s: 1800
+  fem_retention: keep_all
+variables:
+  - id: coh_m1
+    material: "embankment"
+    property: cohesion
+    training_bounds: [90.0, 102.0]
+    distribution: {family: normal, mean: 100.0, std: 5.0, truncate: [90.0, 102.0]}
+  - id: phi_m1
+    material: "embankment"
+    property: friction_angle
+    training_bounds: [21.0, 28.0]
+    distribution: {family: normal, mean: 25.0, std: 3.0, truncate: [21.0, 28.0]}
+  - id: coh_m2
+    material: "sand"
+    property: cohesion
+    training_bounds: [0.0, 2.0]
+    distribution: {family: normal, mean: 0.0, std: 1.0, truncate: [0.0, 2.0]}
+doe:
+  strategy: factorial_3    # 3^3 = 27 points (corners, edge midpoints, centre)
+  seed: 42
+active_learning:
+  acquisition: alc
+  tolerance: 0.01          # author's choice for the 3D case (11-06-2026)
+  max_iterations: 40
+  budget_total_sims: 60
+  n_candidates: 1000
+  refresh_candidates: true
+  validation_grid: {n: 2000, seed: 999}
+  seed: 123
+surrogate:
+  engine: deepgp_r
+  mcmc: {nmcmc: 3000, burn: 1000, thin: 2}
+  kernel: exp2
+  separable: true
+  seed: 123
+exploitation:
+  mcs_samples: 100000
+  failure_threshold: 1.3   # review once the SRF range of this 3D slice is known
+  seed: 7

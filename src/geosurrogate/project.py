@@ -26,7 +26,9 @@ def _atomic_write_text(path: Path, text: str) -> None:
 
 class Project:
     def __init__(self, root: Path, config: ProjectConfig):
-        self.root = Path(root)
+        # Absolute root: derived paths get handed to external processes (RS2,
+        # Rscript) that run with their own working directories.
+        self.root = Path(root).resolve()
         self.config = config
 
     # --- paths ---------------------------------------------------------

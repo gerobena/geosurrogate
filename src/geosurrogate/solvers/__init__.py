@@ -13,5 +13,6 @@ def get_solver(config: ProjectConfig) -> FEMSolver:
     if config.solver.type == "demo":
         return DemoSolver(config)
     if config.solver.type == "rs2":
-        raise NotImplementedError("RS2 solver arrives in phase F4 (see ARQUITECTURA.md)")
+        from .rs2 import RS2Solver  # lazy: requires the optional RS2Scripting package
+        return RS2Solver(config)
     raise ValueError(f"unknown solver type: {config.solver.type}")

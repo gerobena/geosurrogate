@@ -22,7 +22,9 @@ dependencies = [
 
 [project.optional-dependencies]
 ui = ["streamlit>=1.36", "plotly>=5.20"]
-rs2 = ["RS2Scripting>=11.28.0"]
+# Install the RS2Scripting version that matches the RS2 generation on the
+# machine (the package locates RS2 via its generation's registry key).
+rs2 = ["RS2Scripting"]
 dev = ["pytest>=8.0"]
 
 [project.scripts]

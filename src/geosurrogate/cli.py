@@ -79,6 +79,77 @@ def demo_run(
     _run_project(project)
 
 
+@app.command("new")
+def new_cmd(
+    config_file: Path = typer.Argument(..., help="Project config YAML (real-solver or demo)"),
+    workdir: Path = typer.Option(None, "--workdir", "-w", help="Project folder to create"),
+) -> None:
+    """Create a project folder from a config YAML file."""
+    import yaml
+
+    raw = yaml.safe_load(config_file.read_text(encoding="utf-8"))
+    model_file = (raw.get("solver") or {}).get("model_file")
+    if model_file:
+        p = Path(model_file)
+        if not p.is_absolute():
+            p = (config_file.parent / p).resolve()
+        raw["solver"]["model_file"] = str(p)
+    cfg = ProjectConfig.model_validate(raw)
+    if workdir is None:
+        workdir = Path("runs") / f"{config_file.stem}_{dt.datetime.now():%Y%m%d_%H%M%S}"
+    Project.create(workdir, cfg)
+    typer.echo(f"Project created at {workdir}")
+    typer.echo(f"Preflight: geosurrogate check {workdir} [--simulate]")
+    typer.echo(f"Run:       geosurrogate run {workdir}")
+
+
+@app.command("check")
+def check_cmd(
+    project_dir: Path = typer.Argument(..., help="Existing project folder"),
+    simulate: bool = typer.Option(False, "--simulate",
+                                  help="Run ONE smoke simulation at central values and time it"),
+) -> None:
+    """Preflight: connect to the solver, list model materials against the
+    configured variables, and optionally run a single timed smoke simulation."""
+    from .solvers import get_solver
+
+    project = Project.open(project_dir)
+    cfg = project.config
+    typer.echo(f"Solver: {cfg.solver.type} | model: {cfg.solver.model_file}")
+    solver = get_solver(cfg)
+    typer.echo("Connecting...")
+    solver.connect()
+    try:
+        mats = solver.list_materials()
+        typer.echo(f"Materials in model ({len(mats)}):")
+        for m in mats:
+            cur = ", ".join(f"{k}={v:g}" for k, v in m.current_values.items()) or "-"
+            typer.echo(f"  [{m.index}] {m.name}  ({m.criterion})  {cur}")
+        names = {m.name for m in mats}
+        missing = [v for v in cfg.variables if v.material not in names]
+        for v in missing:
+            typer.echo(f"  WARNING: variable '{v.id}' references material "
+                       f"'{v.material}' which is not in the model")
+        if not missing:
+            typer.echo("All configured variables map to model materials: OK")
+        if simulate:
+            if getattr(solver, "is_pool_based", False):
+                typer.echo("--simulate applies to real solvers only (demo serves "
+                           "precomputed points); skipping.")
+                return
+            assignments = {v.id: v.distribution.central_value() for v in cfg.variables}
+            pretty = ", ".join(f"{k}={v:g}" for k, v in assignments.items())
+            typer.echo(f"Smoke simulation at central values: {pretty}")
+            res = solver.run_case(assignments, project.fem_dir / "smoke", "Case_smoke")
+            typer.echo(f"  -> SRF = {res.srf} ({res.status}) in {res.elapsed_s:.0f} s")
+            if res.status != "ok":
+                if res.message:
+                    typer.echo(f"  detail: {res.message}")
+                raise typer.Exit(code=1)
+    finally:
+        solver.shutdown()
+
+
 @app.command("run")
 def run_cmd(project_dir: Path = typer.Argument(..., help="Existing project folder")) -> None:
     """Run (or resume) an existing project."""
