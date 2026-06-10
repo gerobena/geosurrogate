@@ -228,9 +228,18 @@ def exploit_cmd(
 
 
 @app.command("ui")
-def ui_cmd() -> None:
-    """Launch the dashboard (phase F2)."""
-    typer.echo("The Streamlit dashboard arrives in phase F2 (see ARQUITECTURA.md).")
+def ui_cmd(port: int = typer.Option(8501, help="Dashboard port")) -> None:
+    """Launch the Streamlit dashboard."""
+    import subprocess
+    import sys
+
+    app_path = Path(__file__).resolve().parents[2] / "app" / "Home.py"
+    if not app_path.exists():
+        typer.echo(f"Dashboard entrypoint not found: {app_path}")
+        raise typer.Exit(code=1)
+    raise SystemExit(subprocess.call(
+        [sys.executable, "-m", "streamlit", "run", str(app_path),
+         "--server.port", str(port)]))
 
 
 if __name__ == "__main__":
