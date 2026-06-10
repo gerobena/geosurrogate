@@ -1,0 +1,17 @@
+{
+  "app.title": "geosurrogate",
+  "app.tagline": "Surrogates GP con active learning para fiabilidad de taludes",
+  "nav.model": "Modelo",
+  "nav.variables": "Variables",
+  "nav.distributions": "Distribuciones",
+  "nav.doe": "Diseño de Experimentos",
+  "nav.training": "Entrenamiento",
+  "nav.validation": "Validación",
+  "nav.exploitation": "Explotación",
+  "nav.report": "Informe",
+  "common.language": "Idioma",
+  "training.start": "Iniciar entrenamiento",
+  "training.pause": "Pausar",
+  "training.resume": "Reanudar",
+  "validation.no_reject_h0": "No se rechaza H0 al nivel de significación 0,05"
+}

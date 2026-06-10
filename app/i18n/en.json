@@ -1,0 +1,17 @@
+{
+  "app.title": "geosurrogate",
+  "app.tagline": "Active-learning GP surrogates for slope stability reliability",
+  "nav.model": "Model",
+  "nav.variables": "Variables",
+  "nav.distributions": "Distributions",
+  "nav.doe": "Design of Experiments",
+  "nav.training": "Training",
+  "nav.validation": "Validation",
+  "nav.exploitation": "Exploitation",
+  "nav.report": "Report",
+  "common.language": "Language",
+  "training.start": "Start training",
+  "training.pause": "Pause",
+  "training.resume": "Resume",
+  "validation.no_reject_h0": "H0 not rejected at significance level 0.05"
+}

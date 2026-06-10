@@ -1,0 +1,17 @@
+"""Solver adapters. RS2 (real mode) lands in F4; demo mode is available from F1."""
+
+from __future__ import annotations
+
+from ..config import ProjectConfig
+from .base import CaseResult, FEMSolver, MaterialInfo
+from .demo import DemoSolver
+
+__all__ = ["CaseResult", "FEMSolver", "MaterialInfo", "DemoSolver", "get_solver"]
+
+
+def get_solver(config: ProjectConfig) -> FEMSolver:
+    if config.solver.type == "demo":
+        return DemoSolver(config)
+    if config.solver.type == "rs2":
+        raise NotImplementedError("RS2 solver arrives in phase F4 (see ARQUITECTURA.md)")
+    raise ValueError(f"unknown solver type: {config.solver.type}")

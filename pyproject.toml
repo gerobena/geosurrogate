@@ -1,0 +1,39 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "geosurrogate"
+version = "0.1.0"
+description = "Active-learning Gaussian Process surrogates for probabilistic slope stability analysis with geotechnical FEM solvers"
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [{ name = "Geovanny Benavides" }]
+dependencies = [
+    "pydantic>=2.7",
+    "PyYAML>=6.0",
+    "typer>=0.12",
+    "numpy>=1.26",
+    "pandas>=2.2",
+    "scipy>=1.11",
+    "scikit-learn>=1.3",
+    "openpyxl>=3.1",
+]
+
+[project.optional-dependencies]
+ui = ["streamlit>=1.36", "plotly>=5.20"]
+rs2 = ["RS2Scripting>=11.28.0"]
+dev = ["pytest>=8.0"]
+
+[project.scripts]
+geosurrogate = "geosurrogate.cli:app"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+"geosurrogate.surrogate" = ["r/*.R"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = ["e2e: end-to-end tests that require a local R installation with deepgp"]

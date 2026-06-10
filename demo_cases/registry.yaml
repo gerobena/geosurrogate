@@ -1,0 +1,20 @@
+# Demo case registry. Each ready case ships derived data only (no .fez files):
+# case.yaml (full project config) + lookup.csv (real RS2 results pool).
+cases:
+  slope_2d:
+    title: "Homogeneous slope"
+    dims: 2
+    points: 516
+    source: "Rocscience tutorial-derived RS2 model; SRF computed with RS2 (TFM, 2026)"
+  embankment_4d:
+    title: "Embankment on layered foundation (2 materials)"
+    dims: 4
+    points: 551
+    source: "Rocscience 'Embankment' tutorial model; SRF computed with RS2 (TFM, 2026)"
+planned:
+  embankment_3d:
+    note: "3 selected variables over Embankment.fez; dataset to be generated with geosurrogate itself in phase F4 (dogfooding)"
+  cliff_6d:
+    note: "deferred - real-project model, provenance decision pending"
+  cliff_8d:
+    note: "deferred - real-project model, provenance decision pending"

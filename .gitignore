@@ -1,0 +1,22 @@
+# Environments and caches
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+build/
+dist/
+
+# Analysis runs (working folders created by the tool)
+runs/
+
+# FEM models and results are never versioned
+*.fez
+
+# Office lock files
+~$*.xlsx
+~$*.docx
+
+# OS noise
+Thumbs.db
+.DS_Store

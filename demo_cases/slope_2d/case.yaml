@@ -1,0 +1,47 @@
+# Demo case: homogeneous slope, 2 stochastic variables.
+# Pool: 16 training + 500 validation RS2 simulations from the TFM (lookup.csv).
+# Distributions: RS2-style truncated normals from the TFM Case-1 definition
+# (mean, std, truncation = [mean - rel_min, mean + rel_max]); the truncation
+# box coincides with the surrogate training bounds by construction.
+project:
+  name: "Demo - Homogeneous slope (2D)"
+  schema_version: 1
+solver:
+  type: demo
+  demo_case: slope_2d
+  simulate_delay_s: 0.0
+variables:
+  - id: cohesion
+    material: "Slope material"
+    property: cohesion
+    training_bounds: [2.0, 6.0]
+    distribution: {family: normal, mean: 5.0, std: 1.0, truncate: [2.0, 6.0]}
+  - id: friction_angle
+    material: "Slope material"
+    property: friction_angle
+    training_bounds: [25.0, 34.0]
+    distribution: {family: normal, mean: 30.0, std: 3.0, truncate: [25.0, 34.0]}
+doe:
+  strategy: hybrid_lhs_pem
+  n_lhs: 8
+  n_pem: 4
+  seed: 42
+active_learning:
+  acquisition: alc
+  tolerance: 0.001
+  max_iterations: 40
+  budget_total_sims: 60
+  n_candidates: 400
+  refresh_candidates: true
+  validation_grid: {n: 2000, seed: 999}
+  seed: 123
+surrogate:
+  engine: deepgp_r
+  mcmc: {nmcmc: 3000, burn: 1000, thin: 2}
+  kernel: exp2
+  separable: true
+  seed: 123
+exploitation:
+  mcs_samples: 100000
+  failure_threshold: 1.0
+  seed: 7

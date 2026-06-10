@@ -1,0 +1,59 @@
+# Demo case: embankment with 2 stochastic materials, 4 variables.
+# Pool: 51 training + 500 validation RS2 simulations from the TFM (lookup.csv).
+# Distributions: RS2-style truncated normals from the TFM Case-2 definition
+# (mean, std, truncation = [mean - rel_min, mean + rel_max]); the truncation
+# box coincides with the surrogate training bounds by construction.
+project:
+  name: "Demo - Embankment, 2 materials (4D)"
+  schema_version: 1
+solver:
+  type: demo
+  demo_case: embankment_4d
+  simulate_delay_s: 0.0
+variables:
+  - id: coh_m1
+    material: "Embankment fill"
+    property: cohesion
+    training_bounds: [90.0, 102.0]
+    distribution: {family: normal, mean: 100.0, std: 5.0, truncate: [90.0, 102.0]}
+  - id: phi_m1
+    material: "Embankment fill"
+    property: friction_angle
+    training_bounds: [21.0, 28.0]
+    distribution: {family: normal, mean: 25.0, std: 3.0, truncate: [21.0, 28.0]}
+  - id: coh_m2
+    material: "Foundation clay"
+    property: cohesion
+    training_bounds: [0.0, 2.0]
+    distribution: {family: normal, mean: 0.0, std: 1.0, truncate: [0.0, 2.0]}
+  - id: phi_m2
+    material: "Foundation clay"
+    property: friction_angle
+    training_bounds: [31.0, 38.0]
+    distribution: {family: normal, mean: 35.0, std: 3.0, truncate: [31.0, 38.0]}
+doe:
+  strategy: hybrid_lhs_pem
+  n_lhs: 24
+  n_pem: 16
+  seed: 42
+active_learning:
+  acquisition: alc
+  tolerance: 0.001
+  max_iterations: 40
+  budget_total_sims: 80
+  n_candidates: 500
+  refresh_candidates: true
+  validation_grid: {n: 2000, seed: 999}
+  seed: 123
+surrogate:
+  engine: deepgp_r
+  mcmc: {nmcmc: 3000, burn: 1000, thin: 2}
+  kernel: exp2
+  separable: true
+  seed: 123
+# failure_threshold 1.3: the pool's SRF range is 1.28-1.59, so PoF = P[SRF < 1.3]
+# yields a meaningful (small, nonzero) probability for the demo narrative.
+exploitation:
+  mcs_samples: 100000
+  failure_threshold: 1.3
+  seed: 7
