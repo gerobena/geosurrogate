@@ -156,6 +156,77 @@ def run_cmd(project_dir: Path = typer.Argument(..., help="Existing project folde
     _run_project(Project.open(project_dir))
 
 
+def _apply_fast(project: Project, fast: bool) -> None:
+    if fast:
+        data = project.config.model_dump(mode="json")
+        data["surrogate"]["mcmc"] = {"nmcmc": 1000, "burn": 300, "thin": 2}
+        project.config = ProjectConfig.model_validate(data)
+        typer.echo("(fast mode: reduced MCMC - use full mode for reportable metrics)")
+
+
+@app.command("validate")
+def validate_cmd(
+    project_dir: Path = typer.Argument(..., help="Existing project folder"),
+    loocv: bool = typer.Option(True, "--loocv/--no-loocv",
+                               help="Leave-One-Out Cross-Validation (n refits)"),
+    massive: bool = typer.Option(False, "--massive",
+                                 help="Validation against an independent labeled set"),
+    ks: bool = typer.Option(False, "--ks",
+                            help="K-S convergence curve vs n (many refits)"),
+    test_xlsx: Path = typer.Option(None, "--test-xlsx",
+                                   help="Labeled FEM results (columns: var ids + srf)"),
+    use_pool: bool = typer.Option(False, "--use-pool",
+                                  help="Demo projects: use the unused pool as test set"),
+    ks_min: int = typer.Option(5, "--ks-min", help="Starting n for the K-S curve"),
+    fast: bool = typer.Option(False, "--fast", help="Reduced MCMC (quick check)"),
+) -> None:
+    """Validate the trained surrogate of a project (figures + metrics into
+    <project>/validation/)."""
+    from .validation import run_ks_curve, run_loocv, run_massive
+
+    project = Project.open(project_dir)
+    _apply_fast(project, fast)
+    if loocv:
+        m = run_loocv(project)
+        typer.echo(f"LOOCV: R2 = {m['r2']:.4f} | RMSE = {m['rmse']:.4f} | "
+                   f"coverage +/-2sd = {100 * m['coverage_2sd']:.0f}%")
+    if massive or ks:
+        if massive:
+            m = run_massive(project, test_xlsx=test_xlsx, use_pool=use_pool)
+            verdict = ("H0 rejected" if m["ks_h0_rejected_at_005"]
+                       else "H0 not rejected") + " at alpha = 0.05"
+            typer.echo(f"Massive: R2 = {m['r2']:.4f} | RMSE = {m['rmse']:.4f} | "
+                       f"K-S D = {m['ks_D']:.4f} (p = {m['ks_pvalue']:.3f}; {verdict})")
+        if ks:
+            m = run_ks_curve(project, test_xlsx=test_xlsx, use_pool=use_pool,
+                             n_min=ks_min)
+            typer.echo(f"K-S curve: final D = {m['final_D']:.4f} "
+                       f"(p = {m['final_pvalue']:.3f})")
+    typer.echo(f"Outputs in {project.root / 'validation'}")
+
+
+@app.command("exploit")
+def exploit_cmd(
+    project_dir: Path = typer.Argument(..., help="Existing project folder"),
+    samples: int = typer.Option(None, "--samples",
+                                help="MCS sample size (default: config mcs_samples)"),
+    fast: bool = typer.Option(False, "--fast", help="Reduced MCMC (quick check)"),
+) -> None:
+    """Monte Carlo exploitation: SRF distribution and probability of failure
+    (figure + metrics into <project>/exploitation/)."""
+    from .exploitation import run_mcs
+
+    project = Project.open(project_dir)
+    _apply_fast(project, fast)
+    m = run_mcs(project, n_samples=samples)
+    note = f" ({m['pof_note']})" if m.get("pof_note") else ""
+    typer.echo(f"MCS n = {m['n_samples']:,}: SRF mean = {m['srf_mean']:.3f} "
+               f"std = {m['srf_std']:.3f}")
+    typer.echo(f"PoF = P[SRF < {m['failure_threshold']:g}] = {m['pof']:.4g} "
+               f"95% CI [{m['pof_ci95'][0]:.4g}, {m['pof_ci95'][1]:.4g}]{note}")
+    typer.echo(f"Outputs in {project.root / 'exploitation'}")
+
+
 @app.command("ui")
 def ui_cmd() -> None:
     """Launch the dashboard (phase F2)."""

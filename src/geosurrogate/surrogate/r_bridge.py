@@ -52,6 +52,7 @@ def fit_predict_alc(
     rscript_path: Path,
     timeout_s: int,
     log=print,
+    do_alc: bool = True,
 ) -> SurrogateResult:
     rscript_path = Path(rscript_path)
     if not rscript_path.exists():
@@ -83,7 +84,7 @@ def fit_predict_alc(
         str(rscript_path), str(R_SCRIPT), str(workdir),
         str(mcmc.nmcmc), str(mcmc.burn), str(mcmc.thin),
         str(surrogate_cfg.seed), surrogate_cfg.kernel,
-        "1" if surrogate_cfg.separable else "0", "1",
+        "1" if surrogate_cfg.separable else "0", "1" if do_alc else "0",
     ]
     try:
         proc = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout_s)
@@ -98,7 +99,10 @@ def fit_predict_alc(
         raise RBridgeError("R worker failed (exit %d):\n%s" % (proc.returncode, "\n".join(tail)))
 
     preds = pd.read_csv(workdir / "predictions.csv")
-    alc = pd.read_csv(workdir / "alc.csv")["alc"].to_numpy(dtype=float)
+    if do_alc:
+        alc = pd.read_csv(workdir / "alc.csv")["alc"].to_numpy(dtype=float)
+    else:
+        alc = np.empty(0)
     n_cand = len(X_cand)
     mean_all = preds["mean"].to_numpy(dtype=float) * y_sd + y_mean
     s2_all = preds["s2"].to_numpy(dtype=float) * y_sd**2
@@ -116,3 +120,25 @@ def fit_predict_alc(
         s2_valid=s2_all[n_cand:],
         diagnostics=diagnostics,
     )
+
+
+def fit_predict(
+    workdir: Path,
+    X_train: np.ndarray,
+    y_train: np.ndarray,
+    X_pred: np.ndarray,
+    bounds: list[tuple[float, float]],
+    surrogate_cfg: SurrogateConfig,
+    rscript_path: Path,
+    timeout_s: int,
+    log=print,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Prediction-only path (validation/exploitation): fit the GP on the
+    training data and predict mean/s2 on X_pred. No ALC, no validation grid."""
+    res = fit_predict_alc(
+        workdir=workdir, X_train=X_train, y_train=y_train,
+        X_cand=X_pred, X_valid=np.empty((0, len(bounds))),
+        bounds=bounds, surrogate_cfg=surrogate_cfg,
+        rscript_path=rscript_path, timeout_s=timeout_s, log=log, do_alc=False,
+    )
+    return res.mean_cand, res.s2_cand
