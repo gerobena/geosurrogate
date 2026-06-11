@@ -1,7 +1,8 @@
+import pandas as pd
 import streamlit as st
 
-from geosurrogate.ui.common import (current_project, init_page, launch_cli, load_json,
-                    show_image, t, tail_file)
+from geosurrogate.ui.common import (current_project, init_page, launch_cli,
+                                    load_json, show_image, t, tail_file)
 
 init_page("val.title")
 project = current_project()
@@ -11,6 +12,37 @@ if project:
     val_dir = project.root / "validation"
     st.caption(t("val.cost_note"))
 
+    # --- independent testset (real-solver projects) -------------------------
+    testsets = sorted(p for p in val_dir.glob("testset_*.xlsx")
+                      if "_inputs" not in p.name)
+    if not is_demo:
+        with st.expander(t("val.testset"), expanded=not testsets):
+            st.caption(t("val.testset_note"))
+            partials = sorted(val_dir.glob("testset_*_partial.csv"))
+            for p in partials:
+                done = len(pd.read_csv(p))
+                st.progress(min(done / 80, 1.0),
+                            text=t("val.testset_progress", done=done, name=p.name))
+            n = st.number_input("n", min_value=10, max_value=500, value=80)
+            if st.button(t("val.testset_run")):
+                launch_cli(project, ["testset", str(project.root),
+                                     "--n", str(int(n))], "testset")
+                st.info(t("val.launched"))
+            log = tail_file(project.root / "log" / "testset.out", 6)
+            if log:
+                st.code(log)
+
+    def _test_source(key: str) -> list[str]:
+        if is_demo:
+            return ["--use-pool"]
+        if testsets:
+            sel = st.selectbox(t("val.testset_pick"),
+                               options=[str(p) for p in testsets], key=key)
+            return ["--test-xlsx", sel]
+        manual = st.text_input(t("val.testset_manual"), key=key + "_manual")
+        return ["--test-xlsx", manual or ""]
+
+    # --- LOOCV ---------------------------------------------------------------
     with st.expander(t("val.loocv"), expanded=True):
         m = load_json(val_dir / "loocv_metrics.json")
         if m:
@@ -26,6 +58,7 @@ if project:
             launch_cli(project, ["validate", str(project.root), "--loocv"], "validate")
             st.info(t("val.launched"))
 
+    # --- massive ---------------------------------------------------------------
     with st.expander(t("val.massive")):
         st.caption(t("val.need_test"))
         m = load_json(val_dir / "massive_metrics.json")
@@ -41,14 +74,13 @@ if project:
             show_image(val_dir / "massive_panel.png")
         else:
             st.write(t("common.not_available"))
-        test_path = None if is_demo else st.text_input("FEM results file (.xlsx/.csv)",
-                                                       key="massive_test")
+        src = _test_source("massive_src")
         if st.button(t("val.run_massive")):
-            args = ["validate", str(project.root), "--no-loocv", "--massive"]
-            args += ["--use-pool"] if is_demo else ["--test-xlsx", test_path or ""]
-            launch_cli(project, args, "validate")
+            launch_cli(project, ["validate", str(project.root), "--no-loocv",
+                                 "--massive", *src], "validate")
             st.info(t("val.launched"))
 
+    # --- K-S curve ----------------------------------------------------------
     with st.expander(t("val.ks")):
         m = load_json(val_dir / "ks_metrics.json")
         if m:
@@ -59,12 +91,10 @@ if project:
             show_image(val_dir / "ks_curve.png")
         else:
             st.write(t("common.not_available"))
-        test_path2 = None if is_demo else st.text_input("FEM results file (.xlsx/.csv)",
-                                                        key="ks_test")
+        src = _test_source("ks_src")
         if st.button(t("val.run_ks")):
-            args = ["validate", str(project.root), "--no-loocv", "--ks"]
-            args += ["--use-pool"] if is_demo else ["--test-xlsx", test_path2 or ""]
-            launch_cli(project, args, "validate")
+            launch_cli(project, ["validate", str(project.root), "--no-loocv",
+                                 "--ks", *src], "validate")
             st.info(t("val.launched"))
 
     log = tail_file(project.root / "log" / "validate.out")

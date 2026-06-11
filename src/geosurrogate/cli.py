@@ -248,6 +248,15 @@ def exploit_cmd(
     typer.echo(f"Outputs in {project.root / 'exploitation'}")
 
 
+@app.command("report")
+def report_cmd(project_dir: Path = typer.Argument(..., help="Existing project folder")) -> None:
+    """Generate a self-contained HTML report with all available results."""
+    from .reporting.report import generate_report
+
+    path = generate_report(Project.open(project_dir))
+    typer.echo(f"Report: {path}")
+
+
 @app.command("ui")
 def ui_cmd(port: int = typer.Option(8501, help="Dashboard port")) -> None:
     """Launch the Streamlit dashboard."""

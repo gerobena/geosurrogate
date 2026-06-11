@@ -9,7 +9,6 @@
   "common.run": "Ejecutar",
   "common.not_available": "Aún no disponible",
   "common.config": "Configuración",
-
   "home.open": "Abrir proyecto",
   "home.new_demo": "Nuevo desde caso demo",
   "home.existing": "Proyectos existentes (./runs)",
@@ -19,7 +18,6 @@
   "home.create_btn": "Crear proyecto",
   "home.created": "Proyecto creado y seleccionado.",
   "home.none_found": "No hay proyectos en ./runs",
-
   "model.title": "Modelo",
   "model.solver": "Solver",
   "model.demo_info": "Caso demo: cada SRF servido proviene de un pool precalculado de resultados reales de elementos finitos de RS2. No requiere licencia FEM.",
@@ -27,22 +25,18 @@
   "model.pool_points": "Puntos del pool (resultados FEM reales)",
   "model.srf_range": "Rango de SRF en el pool",
   "model.geometry_soon": "El visor de geometría llegará con la extracción de geometría de RS2 (backlog).",
-
   "vars.title": "Variables",
   "vars.dims": "Dimensionalidad (D)",
   "vars.note": "La dimensionalidad emerge de la selección de variables: cualquier subconjunto de propiedades define el espacio de entrada.",
   "vars.table_caption": "Variables estocásticas (solo lectura en esta versión; edita project.yaml para cambiarlas)",
-
   "dist.title": "Distribuciones",
   "dist.note": "Definición estilo RS2: familia paramétrica + truncamiento absoluto. La banda sombreada es la caja de entrenamiento del surrogate.",
-
   "doe.title": "Diseño de Experimentos",
   "doe.strategy": "Estrategia",
   "doe.total": "Tamaño del diseño",
   "doe.preview": "Previsualizar diseño",
   "doe.est_time": "Tiempo FEM estimado por simulación (s)",
   "doe.est_total": "Coste estimado del DoE",
-
   "train.title": "Entrenamiento",
   "train.phase": "Fase",
   "train.status": "Estado",
@@ -57,7 +51,6 @@
   "train.tolerance": "tolerancia",
   "train.dataset_tail": "Últimos casos simulados",
   "train.stale": "El estado lleva un rato sin actualizarse: el proceso en segundo plano puede haberse detenido.",
-
   "val.title": "Validación",
   "val.loocv": "Validación cruzada Leave-One-Out",
   "val.massive": "Validación masiva (resultados FEM independientes)",
@@ -71,7 +64,6 @@
   "val.no_reject_h0": "No se rechaza H0 al nivel de significación 0,05",
   "val.reject_h0": "Se rechaza H0 al nivel de significación 0,05",
   "val.log": "Log del último análisis",
-
   "exp.title": "Explotación",
   "exp.samples": "Muestras Monte Carlo",
   "exp.threshold": "Umbral de fallo (SRF)",
@@ -80,9 +72,15 @@
   "exp.ci": "IC 95%",
   "exp.hist": "Distribución del SRF predicho",
   "exp.launched": "MCS lanzado en segundo plano: actualiza al terminar.",
-
   "report.title": "Informe y descargas",
   "report.artifacts": "Artefactos disponibles",
   "report.zip": "Descargar todos los resultados (zip)",
-  "report.html_soon": "El informe PDF/HTML de un clic está en el backlog; todas las figuras y métricas se descargan abajo."
+  "report.html_soon": "El informe PDF/HTML de un clic está en el backlog; todas las figuras y métricas se descargan abajo.",
+  "val.testset": "Testset FEM independiente (para validacion masiva y K-S)",
+  "val.testset_note": "Genera un lote LHS dentro de la caja de entrenamiento y lo simula con el solver real. Horas de FEM; reanudable. No lo lances mientras el entrenamiento este activo (comparten puertos RS2).",
+  "val.testset_run": "Lanzar testset",
+  "val.testset_progress": "{name}: {done} simulaciones hechas",
+  "val.testset_pick": "Archivo de testset",
+  "val.testset_manual": "Archivo de resultados FEM (.xlsx/.csv)",
+  "report.generate": "Generar informe HTML"
 }

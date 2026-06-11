@@ -9,7 +9,6 @@
   "common.run": "Run",
   "common.not_available": "Not available yet",
   "common.config": "Configuration",
-
   "home.open": "Open project",
   "home.new_demo": "New from demo case",
   "home.existing": "Existing projects (./runs)",
@@ -19,7 +18,6 @@
   "home.create_btn": "Create project",
   "home.created": "Project created and selected.",
   "home.none_found": "No projects found under ./runs",
-
   "model.title": "Model",
   "model.solver": "Solver",
   "model.demo_info": "Demo case: every SRF served comes from a precomputed pool of real RS2 finite-element results. No FEM license needed.",
@@ -27,22 +25,18 @@
   "model.pool_points": "Pool points (real FEM results)",
   "model.srf_range": "SRF range in pool",
   "model.geometry_soon": "Geometry viewer arrives with the RS2 geometry extraction (backlog).",
-
   "vars.title": "Variables",
   "vars.dims": "Dimensionality (D)",
   "vars.note": "Dimensionality emerges from variable selection: any subset of material properties defines the input space.",
   "vars.table_caption": "Stochastic variables (read-only in this version; edit project.yaml to change)",
-
   "dist.title": "Distributions",
   "dist.note": "RS2-style definition: parametric family + absolute truncation. The shaded band is the surrogate training box.",
-
   "doe.title": "Design of Experiments",
   "doe.strategy": "Strategy",
   "doe.total": "Design size",
   "doe.preview": "Preview design",
   "doe.est_time": "Estimated FEM time per simulation (s)",
   "doe.est_total": "Estimated DoE cost",
-
   "train.title": "Training",
   "train.phase": "Phase",
   "train.status": "Status",
@@ -57,7 +51,6 @@
   "train.tolerance": "tolerance",
   "train.dataset_tail": "Latest simulated cases",
   "train.stale": "State not updated for a while - the background process may have been stopped.",
-
   "val.title": "Validation",
   "val.loocv": "Leave-One-Out Cross-Validation",
   "val.massive": "Massive validation (independent FEM results)",
@@ -71,7 +64,6 @@
   "val.no_reject_h0": "H0 not rejected at significance level 0.05",
   "val.reject_h0": "H0 rejected at significance level 0.05",
   "val.log": "Last analysis log",
-
   "exp.title": "Exploitation",
   "exp.samples": "Monte Carlo samples",
   "exp.threshold": "Failure threshold (SRF)",
@@ -80,9 +72,15 @@
   "exp.ci": "95% CI",
   "exp.hist": "Predicted SRF distribution",
   "exp.launched": "MCS launched in the background - refresh when finished.",
-
   "report.title": "Report & downloads",
   "report.artifacts": "Available artifacts",
   "report.zip": "Download all results (zip)",
-  "report.html_soon": "One-click PDF/HTML report is on the backlog; all figures and metrics are downloadable below."
+  "report.html_soon": "One-click PDF/HTML report is on the backlog; all figures and metrics are downloadable below.",
+  "val.testset": "Independent FEM testset (for massive validation and K-S)",
+  "val.testset_note": "Generates an LHS batch inside the training box and simulates it with the real solver. Hours of FEM time; resumable. Do not run while training is active (shared RS2 ports).",
+  "val.testset_run": "Launch testset",
+  "val.testset_progress": "{name}: {done} simulations done",
+  "val.testset_pick": "Testset file",
+  "val.testset_manual": "FEM results file (.xlsx/.csv)",
+  "report.generate": "Generate HTML report"
 }
