@@ -10,7 +10,10 @@ test's power, so convergence is argued primarily with D.
 
 from __future__ import annotations
 
+import datetime as dt
 import json
+import os
+import shutil
 from pathlib import Path
 
 import numpy as np
@@ -35,23 +38,35 @@ def run_ks_curve(project: Project, test_xlsx: Path | None = None,
     project.log(f"K-S convergence: refitting for n = {n_min}..{n_total} "
                 f"against {len(test)} FEM results")
 
-    rows = []
-    for n in range(n_min, n_total + 1):
-        mean, _ = fit_predict(
-            workdir=project.surrogate_dir / "work_ks",
-            X_train=X[:n], y_train=y[:n], X_pred=X_test,
-            bounds=cfg.bounds(), surrogate_cfg=cfg.surrogate,
-            rscript_path=cfg.solver.rscript_path, timeout_s=cfg.solver.timeout_s,
-            log=lambda _msg: None,
-        )
-        ks = stats.ks_2samp(actual, mean)
-        rows.append({"n_train": n, "ks_D": float(ks.statistic),
-                     "ks_pvalue": float(ks.pvalue)})
-        project.log(f"  n={n}: D={ks.statistic:.4f}  p={ks.pvalue:.4f}")
-
-    curve = pd.DataFrame(rows)
     out_dir = project.root / "validation"
     out_dir.mkdir(exist_ok=True)
+    progress_path = out_dir / "ks_progress.json"
+    workdir = project.surrogate_dir / f"work_ks_{os.getpid()}"
+
+    rows = []
+    total_steps = n_total - n_min + 1
+    try:
+        for step, n in enumerate(range(n_min, n_total + 1), start=1):
+            mean, _ = fit_predict(
+                workdir=workdir,
+                X_train=X[:n], y_train=y[:n], X_pred=X_test,
+                bounds=cfg.bounds(), surrogate_cfg=cfg.surrogate,
+                rscript_path=cfg.solver.rscript_path, timeout_s=cfg.solver.timeout_s,
+                log=lambda _msg: None,
+            )
+            ks = stats.ks_2samp(actual, mean)
+            rows.append({"n_train": n, "ks_D": float(ks.statistic),
+                         "ks_pvalue": float(ks.pvalue)})
+            project.log(f"  n={n}: D={ks.statistic:.4f}  p={ks.pvalue:.4f}")
+            progress_path.write_text(json.dumps(
+                {"done": step, "total": total_steps,
+                 "ts": dt.datetime.now().isoformat(timespec="seconds")}),
+                encoding="utf-8")
+    finally:
+        shutil.rmtree(workdir, ignore_errors=True)
+        progress_path.unlink(missing_ok=True)
+
+    curve = pd.DataFrame(rows)
     curve.to_csv(out_dir / "ks_curve.csv", index=False)
 
     final = rows[-1]

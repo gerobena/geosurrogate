@@ -82,5 +82,9 @@
   "val.testset_progress": "{name}: {done} simulaciones hechas",
   "val.testset_pick": "Archivo de testset",
   "val.testset_manual": "Archivo de resultados FEM (.xlsx/.csv)",
-  "report.generate": "Generar informe HTML"
+  "report.generate": "Generar informe HTML",
+  "train.progress": "Presupuesto FEM: {done} / {total} simulaciones",
+  "train.done_converged": "Modelo entrenado: convergencia alcanzada",
+  "train.done_other": "Entrenamiento finalizado: {reason}",
+  "val.in_progress": "Ejecutando: {done} / {total} reentrenamientos completados"
 }

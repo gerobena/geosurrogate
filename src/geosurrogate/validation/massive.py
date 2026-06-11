@@ -28,14 +28,20 @@ def run_massive(project: Project, test_xlsx: Path | None = None,
     project.log(f"Massive validation: {len(X)} training points vs "
                 f"{len(test)} independent FEM results")
 
-    mean, s2 = fit_predict(
-        workdir=project.surrogate_dir / "work_massive",
-        X_train=X, y_train=y,
-        X_pred=test[cfg.var_ids].to_numpy(dtype=float),
-        bounds=cfg.bounds(), surrogate_cfg=cfg.surrogate,
-        rscript_path=cfg.solver.rscript_path, timeout_s=cfg.solver.timeout_s,
-        log=project.log,
-    )
+    import os
+    import shutil
+    workdir = project.surrogate_dir / f"work_massive_{os.getpid()}"
+    try:
+        mean, s2 = fit_predict(
+            workdir=workdir,
+            X_train=X, y_train=y,
+            X_pred=test[cfg.var_ids].to_numpy(dtype=float),
+            bounds=cfg.bounds(), surrogate_cfg=cfg.surrogate,
+            rscript_path=cfg.solver.rscript_path, timeout_s=cfg.solver.timeout_s,
+            log=project.log,
+        )
+    finally:
+        shutil.rmtree(workdir, ignore_errors=True)
 
     actual = test["srf"].to_numpy(dtype=float)
     resid = actual - mean

@@ -34,6 +34,22 @@ if project:
         err = state.get("error_max")
         cols[4].metric(t("train.error"), f"{err:.5f}" if err is not None else "-")
 
+        budget = state.get("budget_total") or cfg.active_learning.budget_total_sims
+        n_done = int(state.get("n_samples") or 0)
+        if n_done or running:
+            st.progress(min(n_done / budget, 1.0),
+                        text=t("train.progress", done=n_done, total=budget))
+        if state.get("status") == "finished":
+            reason = state.get("stop_reason", "")
+            if reason == "converged":
+                st.success(t("train.done_converged"))
+            else:
+                st.info(t("train.done_other", reason=reason))
+            flag = f"celebrated_{project.root}"
+            if reason == "converged" and not st.session_state.get(flag):
+                st.balloons()
+                st.session_state[flag] = True
+
         if running and state.get("updated_at"):
             age = (dt.datetime.now()
                    - dt.datetime.fromisoformat(state["updated_at"])).total_seconds()
