@@ -45,6 +45,60 @@ def _import_rs2():
     return RS2Modeler, RS2Interpreter, MaterialType, StrengthCriteriaTypes
 
 
+def _extract_materials(model) -> list[MaterialInfo]:
+    out = []
+    for i, mat in enumerate(model.getAllMaterialProperties()):
+        name = mat.getMaterialName()
+        current: dict[str, float] = {}
+        criterion = "unknown"
+        try:
+            mc = mat.Strength.MohrCoulombStrength
+            current = {
+                "peak_cohesion": float(mc.getPeakCohesion()),
+                "peak_friction_angle": float(mc.getPeakFrictionAngle()),
+            }
+            criterion = "mohr_coulomb"
+        except Exception:
+            pass
+        out.append(MaterialInfo(name=name, index=i, criterion=criterion,
+                                current_values=current))
+    return out
+
+
+def discover_materials(model_path: Path, port: int = 60054,
+                       modeler_executable: Path | None = None) -> list[MaterialInfo]:
+    """One-shot material discovery for the from-zero wizard: start RS2 Modeler,
+    open the model, list materials with current values, shut everything down.
+    Requires a licensed RS2 installation on this machine."""
+    RS2Modeler, _i, _mt, _sc = _import_rs2()
+    model_path = Path(model_path).resolve()
+    if not model_path.exists():
+        raise FileNotFoundError(f"FEM model not found: {model_path}")
+    try:
+        RS2Modeler.startApplication(
+            port=port,
+            overridePathToExecutable=(str(modeler_executable)
+                                      if modeler_executable else None),
+            timeout=START_TIMEOUT_S)
+        modeler = RS2Modeler(port=port)
+    except (FileNotFoundError, TimeoutError, RuntimeError) as e:
+        raise RS2ConnectionError(
+            f"{e} - check that RS2 is installed and licensed, that port {port} "
+            f"is free (close stale RS2/Interpret processes), or set an "
+            f"executable override.") from e
+    try:
+        model = modeler.openFile(str(model_path))
+        try:
+            return _extract_materials(model)
+        finally:
+            model.close()
+    finally:
+        try:
+            modeler.closeProgram(False)
+        except Exception:
+            pass
+
+
 class RS2Solver:
     is_pool_based = False
 
@@ -116,23 +170,7 @@ class RS2Solver:
     def list_materials(self) -> list[MaterialInfo]:
         model = self._modeler.openFile(str(self.model_path))
         try:
-            out = []
-            for i, mat in enumerate(model.getAllMaterialProperties()):
-                name = mat.getMaterialName()
-                current: dict[str, float] = {}
-                criterion = "unknown"
-                try:
-                    mc = mat.Strength.MohrCoulombStrength
-                    current = {
-                        "peak_cohesion": float(mc.getPeakCohesion()),
-                        "peak_friction_angle": float(mc.getPeakFrictionAngle()),
-                    }
-                    criterion = "mohr_coulomb"
-                except Exception:
-                    pass
-                out.append(MaterialInfo(name=name, index=i, criterion=criterion,
-                                        current_values=current))
-            return out
+            return _extract_materials(model)
         finally:
             model.close()
 

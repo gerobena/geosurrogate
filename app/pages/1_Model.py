@@ -1,7 +1,8 @@
 import pandas as pd
 import streamlit as st
 
-from geosurrogate.ui.common import current_project, init_page, t
+from geosurrogate.ui.common import (current_project, init_page, launch_cli, t,
+                                    tail_file)
 from geosurrogate.solvers.demo import demo_cases_dir, load_registry
 
 init_page("model.title")
@@ -25,11 +26,26 @@ if project:
         c3.metric("Caso", meta.get("title", case_id))
         st.caption(f"Source: {meta.get('source', '-')}")
     else:
-        st.info(t("model.rs2_info"))
-        st.code(f"geosurrogate check {project.root} --simulate", language="powershell")
         st.write(f"Model file: `{cfg.solver.model_file}`")
         st.write(f"Ports: modeler {cfg.solver.ports.modeler} / "
                  f"interpreter {cfg.solver.ports.interpreter}")
+
+        @st.fragment(run_every=3)
+        def preflight_block():
+            st.markdown(f"**{t('model.preflight')}**")
+            st.caption(t("model.preflight_note"))
+            smoke = st.checkbox(t("model.preflight_smoke"), value=True)
+            if st.button(t("model.preflight_run"), type="primary"):
+                args = ["check", str(project.root)]
+                if smoke:
+                    args.append("--simulate")
+                launch_cli(project, args, "check")
+                st.info(t("val.launched"))
+            log = tail_file(project.root / "log" / "check.out", 25)
+            if log:
+                st.code(log)
+
+        preflight_block()
 
     st.caption(t("model.geometry_soon"))
     with st.expander(t("common.config")):
