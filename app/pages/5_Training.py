@@ -41,7 +41,8 @@ if project:
                 st.warning(t("train.stale"))
 
         events = load_events(project)
-        if len(events):
+        # early in a run only DoE events exist and the error_max column is absent
+        if len(events) and "error_max" in events.columns:
             iters = events[events["type"] == "al_iteration"].dropna(subset=["error_max"])
             if len(iters):
                 fig = go.Figure()

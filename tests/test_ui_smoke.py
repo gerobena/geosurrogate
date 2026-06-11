@@ -35,3 +35,17 @@ def test_page_renders_with_project(page, demo_project):
     at.session_state["project_root"] = demo_project
     at.run()
     assert not at.exception
+
+
+def test_training_page_renders_mid_doe_phase(tmp_path):
+    """Regression: right after Start, events exist but none carries error_max
+    yet (DoE phase) - the live chart must not crash on the missing column."""
+    root = tmp_path / "proj"
+    project = Project.create(root, load_case_config("slope_2d"))
+    project.append_event("phase_change", phase="doe", target=9, done=0)
+    project.append_event("doe_case_done", case_id="Case_0001", srf=1.0,
+                         status="ok", elapsed_s=0.1, message=None)
+    at = AppTest.from_file(str(APP / "pages" / "5_Training.py"), default_timeout=30)
+    at.session_state["project_root"] = str(root)
+    at.run()
+    assert not at.exception
