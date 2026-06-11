@@ -75,8 +75,7 @@ def run_loocv(project: Project) -> dict:
 
     from ..reporting.figures import loocv_panel
     fig_path = out_dir / "loocv_panel.png"
-    loocv_panel(y, preds, sd, metrics, fig_path,
-                title=f"{cfg.dims}D Surrogate Model Validation (LOOCV)")
+    loocv_panel(y, preds, sd, metrics, fig_path)
     metrics["figure"] = str(fig_path)
     project.append_event("loocv_done", **{k: v for k, v in metrics.items()
                                           if isinstance(v, (int, float))})

@@ -12,10 +12,9 @@ if project:
     cfg = project.config
     is_demo = cfg.solver.type == "demo"
     val_dir = project.root / "validation"
-    st.caption(t("val.cost_note"))
+    val_dir.mkdir(exist_ok=True)
 
     def _running(progress_file) -> dict | None:
-        """Progress data of an in-flight analysis, or None if absent/stale."""
         data = load_json(progress_file)
         if not data:
             return None
@@ -32,37 +31,13 @@ if project:
 
     @st.fragment(run_every=3)
     def live_validation():
-        # --- independent testset (real-solver projects) ----------------------
-        testsets = sorted(p for p in val_dir.glob("testset_*.xlsx")
-                          if "_inputs" not in p.name)
-        if not is_demo:
-            with st.expander(t("val.testset"), expanded=not testsets):
-                st.caption(t("val.testset_note"))
-                for p in sorted(val_dir.glob("testset_*_partial.csv")):
-                    done = len(pd.read_csv(p))
-                    st.progress(min(done / 80, 1.0),
-                                text=t("val.testset_progress", done=done, name=p.name))
-                n = st.number_input("n", min_value=10, max_value=500, value=80)
-                if st.button(t("val.testset_run")):
-                    launch_cli(project, ["testset", str(project.root),
-                                         "--n", str(int(n))], "testset")
-                    st.info(t("val.launched"))
-                log = tail_file(project.root / "log" / "testset.out", 6)
-                if log:
-                    st.code(log)
-
-        def _test_source(key: str) -> list[str]:
-            if is_demo:
-                return ["--use-pool"]
-            if testsets:
-                sel = st.selectbox(t("val.testset_pick"),
-                                   options=[str(p) for p in testsets], key=key)
-                return ["--test-xlsx", sel]
-            manual = st.text_input(t("val.testset_manual"), key=key + "_manual")
-            return ["--test-xlsx", manual or ""]
-
-        # --- LOOCV ------------------------------------------------------------
-        with st.expander(t("val.loocv"), expanded=True):
+        # =====================================================================
+        # 1. INTERNAL VALIDATION - only the training data is needed
+        # =====================================================================
+        st.subheader(t("val.sec_internal"))
+        st.caption(t("val.sec_internal_note"))
+        with st.container(border=True):
+            st.markdown(f"**{t('val.loocv')}**")
             prog = _running(val_dir / "loocv_progress.json")
             m = load_json(val_dir / "loocv_metrics.json")
             if m:
@@ -81,9 +56,76 @@ if project:
                            "validate")
                 st.info(t("val.launched"))
 
-        # --- massive ------------------------------------------------------------
-        with st.expander(t("val.massive")):
-            st.caption(t("val.need_test"))
+        # =====================================================================
+        # 2. INDEPENDENT VALIDATION - requires FEM results the model never saw
+        # =====================================================================
+        st.subheader(t("val.sec_independent"))
+        st.caption(t("val.sec_independent_note"))
+
+        # --- validation dataset source ---------------------------------------
+        source_args: list[str] | None = None
+        with st.container(border=True):
+            st.markdown(f"**{t('val.dataset')}**")
+            testsets = sorted(p for p in val_dir.glob("testset_*.xlsx")
+                              if "_inputs" not in p.name)
+            options: list[str] = []
+            if is_demo:
+                from geosurrogate.solvers.demo import demo_cases_dir
+                lookup = pd.read_csv(demo_cases_dir() / cfg.solver.demo_case
+                                     / "lookup.csv")
+                n_ok = int((project.load_dataset()["status"] == "ok").sum())
+                pool_label = t("val.dataset_pool", n=max(len(lookup) - n_ok, 0))
+                options.append(pool_label)
+            options += [str(p) for p in testsets]
+            if options:
+                sel = st.selectbox(t("val.testset_pick"), options=options,
+                                   key="indep_source")
+                source_args = (["--use-pool"] if is_demo and sel == options[0]
+                               else ["--test-xlsx", sel])
+            else:
+                st.warning(t("val.dataset_none"))
+
+            up_col, gen_col = st.columns(2)
+            with up_col:
+                uploaded = st.file_uploader(t("val.upload"), type=["xlsx", "csv"],
+                                            key="upload_testset")
+                if uploaded is not None:
+                    import io
+                    raw = (pd.read_csv(io.BytesIO(uploaded.getvalue()))
+                           if uploaded.name.lower().endswith(".csv")
+                           else pd.read_excel(io.BytesIO(uploaded.getvalue())))
+                    missing = [c for c in (*cfg.var_ids, "srf")
+                               if c not in raw.columns]
+                    if missing:
+                        st.error(t("val.upload_bad", cols=", ".join(missing)))
+                    else:
+                        stem = uploaded.name.rsplit(".", 1)[0]
+                        dest = val_dir / f"testset_upload_{stem}.xlsx"
+                        if not dest.exists():
+                            raw[[*cfg.var_ids, "srf"]].dropna().to_excel(
+                                dest, index=False)
+                            st.success(t("val.upload_ok", n=len(raw),
+                                         name=dest.name))
+            with gen_col:
+                if not is_demo:
+                    st.caption(t("val.testset_note"))
+                    for p in sorted(val_dir.glob("testset_*_partial.csv")):
+                        done = len(pd.read_csv(p))
+                        st.progress(min(done / 80, 1.0),
+                                    text=t("val.testset_progress", done=done,
+                                           name=p.name))
+                    n = st.number_input("n", min_value=10, max_value=500, value=80)
+                    if st.button(t("val.testset_run")):
+                        launch_cli(project, ["testset", str(project.root),
+                                             "--n", str(int(n))], "testset")
+                        st.info(t("val.launched"))
+                    log = tail_file(project.root / "log" / "testset.out", 4)
+                    if log:
+                        st.code(log)
+
+        # --- massive validation -----------------------------------------------
+        with st.container(border=True):
+            st.markdown(f"**{t('val.massive')}**")
             m = load_json(val_dir / "massive_metrics.json")
             if m:
                 verdict = t("val.reject_h0") if m["ks_h0_rejected_at_005"] \
@@ -97,14 +139,14 @@ if project:
                 show_image(val_dir / "massive_panel.png")
             else:
                 st.write(t("common.not_available"))
-            src = _test_source("massive_src")
-            if st.button(t("val.run_massive")):
+            if st.button(t("val.run_massive"), disabled=source_args is None):
                 launch_cli(project, ["validate", str(project.root), "--no-loocv",
-                                     "--massive", *src], "validate")
+                                     "--massive", *source_args], "validate")
                 st.info(t("val.launched"))
 
         # --- K-S curve ----------------------------------------------------------
-        with st.expander(t("val.ks")):
+        with st.container(border=True):
+            st.markdown(f"**{t('val.ks')}**")
             prog = _running(val_dir / "ks_progress.json")
             m = load_json(val_dir / "ks_metrics.json")
             if m:
@@ -117,10 +159,10 @@ if project:
                 _progress_bar(prog)
             elif not m:
                 st.write(t("common.not_available"))
-            src = _test_source("ks_src")
-            if st.button(t("val.run_ks"), disabled=prog is not None):
+            if st.button(t("val.run_ks"),
+                         disabled=(source_args is None or prog is not None)):
                 launch_cli(project, ["validate", str(project.root), "--no-loocv",
-                                     "--ks", *src], "validate")
+                                     "--ks", *source_args], "validate")
                 st.info(t("val.launched"))
 
         log = tail_file(project.root / "log" / "validate.out")

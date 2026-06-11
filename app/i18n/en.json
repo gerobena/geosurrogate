@@ -86,5 +86,16 @@
   "train.progress": "FEM budget: {done} / {total} simulations",
   "train.done_converged": "Model trained - convergence reached",
   "train.done_other": "Training finished: {reason}",
-  "val.in_progress": "Running: {done} / {total} refits completed"
+  "val.in_progress": "Running: {done} / {total} refits completed",
+  "val.sec_internal": "Internal validation - training data only",
+  "val.sec_internal_note": "LOOCV retrains the model leaving one point out at a time. No independent dataset is required.",
+  "val.sec_independent": "Independent validation - requires a FEM dataset the model never saw",
+  "val.sec_independent_note": "Massive validation and the K-S convergence curve compare the surrogate against independent FEM results. Choose or create the validation dataset first.",
+  "val.dataset": "Validation dataset",
+  "val.dataset_pool": "Demo pool ({n} unused real FEM results)",
+  "val.dataset_none": "No independent dataset yet: generate one with the FEM solver or upload a labeled file (variable ids + srf).",
+  "val.upload": "Upload labeled results (.xlsx / .csv)",
+  "val.upload_ok": "File accepted: {n} rows saved as {name}",
+  "val.upload_bad": "Invalid file - missing columns: {cols}",
+  "val.generate": "Generate with the FEM solver"
 }

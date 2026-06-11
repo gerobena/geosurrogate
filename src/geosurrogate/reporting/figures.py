@@ -20,10 +20,10 @@ DPI = 150
 
 
 def loocv_panel(actual: np.ndarray, pred: np.ndarray, sd: np.ndarray,
-                metrics: dict, out: Path, title: str) -> None:
+                metrics: dict, out: Path) -> None:
+    # No figure-level title: the dashboard cards and the report sections
+    # already label these figures and show the metrics.
     fig, axes = plt.subplots(1, 3, figsize=(16, 4.6))
-    fig.suptitle(f"{title}\n$R^2$ = {metrics['r2']:.3f} | RMSE = "
-                 f"{metrics['rmse']:.3f}", fontsize=13, fontweight="bold")
 
     ax = axes[0]
     lims = [min(actual.min(), pred.min()), max(actual.max(), pred.max())]
@@ -62,12 +62,8 @@ def loocv_panel(actual: np.ndarray, pred: np.ndarray, sd: np.ndarray,
 
 
 def massive_panel(actual: np.ndarray, pred: np.ndarray, metrics: dict,
-                  out: Path, title: str) -> None:
+                  out: Path) -> None:
     fig, axes = plt.subplots(1, 2, figsize=(12.5, 5))
-    fig.suptitle(f"{title}\n$R^2$ = {metrics['r2']:.3f} | RMSE = "
-                 f"{metrics['rmse']:.3f} | K-S D = {metrics['ks_D']:.4f} "
-                 f"(p = {metrics['ks_pvalue']:.3f})", fontsize=12,
-                 fontweight="bold")
 
     ax = axes[0]
     lims = [min(actual.min(), pred.min()), max(actual.max(), pred.max())]
@@ -97,9 +93,8 @@ def massive_panel(actual: np.ndarray, pred: np.ndarray, metrics: dict,
     plt.close(fig)
 
 
-def ks_curve_panel(curve: pd.DataFrame, out: Path, title: str) -> None:
+def ks_curve_panel(curve: pd.DataFrame, out: Path) -> None:
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(13, 5))
-    fig.suptitle(title, fontsize=13, fontweight="bold")
 
     ax1.plot(curve["n_train"], curve["ks_D"], "s-", color="#e67e22", lw=2, ms=6)
     ax1.axhline(0, color="green", ls="--", lw=1.5, label="Perfect agreement (D = 0)")

@@ -78,9 +78,7 @@ def run_ks_curve(project: Project, test_xlsx: Path | None = None,
 
     from ..reporting.figures import ks_curve_panel
     fig_path = out_dir / "ks_curve.png"
-    ks_curve_panel(curve, fig_path,
-                   title=f"{cfg.dims}D Surrogate - Distributional Convergence "
-                         f"(two-sample K-S)")
+    ks_curve_panel(curve, fig_path)
     metrics["figure"] = str(fig_path)
     project.append_event("ks_curve_done", **{k: v for k, v in metrics.items()
                                              if isinstance(v, (int, float, bool))})

@@ -72,8 +72,7 @@ def run_massive(project: Project, test_xlsx: Path | None = None,
 
     from ..reporting.figures import massive_panel
     fig_path = out_dir / "massive_panel.png"
-    massive_panel(actual, mean, metrics, fig_path,
-                  title=f"{cfg.dims}D Surrogate vs FEM - Independent Validation")
+    massive_panel(actual, mean, metrics, fig_path)
     metrics["figure"] = str(fig_path)
     project.append_event("massive_validation_done",
                          **{k: v for k, v in metrics.items()
