@@ -352,7 +352,7 @@ Orden de dependencias: F1 → F2 → (F3 ∥ F4) → F5. Las fases 1–3 no nece
 
 ## 15. Backlog inmediato (tras F1–F4)
 
-1. **Validación del caso 3D real** — pendiente de orden del autor (no lanzar LOOCV/masiva hasta que lo pida). Para la masiva: **comando de lote de validación independiente** (`geosurrogate testset <proyecto> -n 50..100`): genera un LHS independiente dentro de la caja de entrenamiento, lo simula con el solver real y guarda el set etiquetado listo para `validate --test-xlsx`. El autor aprobó la idea (11-06-2026).
+1. **Validación del caso 3D real** — pendiente de orden del autor (no lanzar LOOCV/masiva hasta que la dé). El comando `geosurrogate testset` ya está **construido y probado** (11-06-2026): LHS independiente en la caja de entrenamiento (semilla 777, distinta de las de entrenamiento), simulación con el solver real, reanudable (parcial CSV tras cada caso), salida lista para `validate --massive --ks --test-xlsx`; rechaza proyectos demo (ahí se usa `--use-pool`).
 2. Empaquetado del 3D como caso demo (`tools/build_demo_cases.py` + registry) cuando termine la corrida.
 3. UI: editor de variables/distribuciones para crear proyectos desde cero (hoy: demo cases + YAML); replay animado de `events.jsonl`; subida de `.fez` con descubrimiento de materiales (requiere RS2 local).
 4. Informe HTML/PDF de un clic (la página 8 ya descarga artefactos y zip).

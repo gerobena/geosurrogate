@@ -109,8 +109,11 @@ def _phase_doe(project: Project, solver) -> None:
             "source": f"doe_{label}", "elapsed_s": round(result.elapsed_s, 2),
         })
         project.append_event("doe_case_done", case_id=case_id, srf=result.srf,
-                             status=result.status, elapsed_s=round(result.elapsed_s, 2))
+                             status=result.status, elapsed_s=round(result.elapsed_s, 2),
+                             message=result.message)
         project.log(f"  {case_id} [{label}] -> SRF = {result.srf} ({result.status})")
+        if result.message:
+            project.log(f"    failure detail: {result.message}")
         if result.status != "ok":
             failures += 1
             if failures >= MAX_CONSECUTIVE_FAILURES:
@@ -201,8 +204,11 @@ def _phase_al(project: Project, solver) -> str:
                 "elapsed_s": round(result.elapsed_s, 2),
             })
             project.append_event("al_case_done", case_id=case_id, srf=result.srf,
-                                 predicted_srf=round(predicted, 4), status=result.status)
+                                 predicted_srf=round(predicted, 4), status=result.status,
+                                 message=result.message)
             project.log(f"  {case_id} [al] -> SRF = {result.srf} (predicted {predicted:.3f})")
+            if result.message:
+                project.log(f"    failure detail: {result.message}")
             if result.status != "ok":
                 failures += 1
                 if failures >= MAX_CONSECUTIVE_FAILURES:

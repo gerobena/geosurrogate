@@ -205,6 +205,27 @@ def validate_cmd(
     typer.echo(f"Outputs in {project.root / 'validation'}")
 
 
+@app.command("testset")
+def testset_cmd(
+    project_dir: Path = typer.Argument(..., help="Existing project folder"),
+    n: int = typer.Option(80, "--n", help="Number of independent LHS simulations"),
+    seed: int = typer.Option(777, "--seed", help="LHS seed (distinct from training seeds)"),
+    dry_run: bool = typer.Option(False, "--dry-run",
+                                 help="Write the input design only, without simulating"),
+) -> None:
+    """Generate an independent labeled validation batch with the real solver
+    (LHS inside the training box). Output is ready for
+    `geosurrogate validate --massive --ks --test-xlsx <file>`. Resumable."""
+    from .validation.testset import generate_testset
+
+    project = Project.open(project_dir)
+    path = generate_testset(project, n=n, seed=seed, dry_run=dry_run)
+    typer.echo(f"Output: {path}")
+    if not dry_run:
+        typer.echo(f"Next: geosurrogate validate {project_dir} --no-loocv "
+                   f"--massive --ks --test-xlsx {path}")
+
+
 @app.command("exploit")
 def exploit_cmd(
     project_dir: Path = typer.Argument(..., help="Existing project folder"),
