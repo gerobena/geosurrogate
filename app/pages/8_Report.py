@@ -24,7 +24,7 @@ ARTIFACTS = [
 init_page("report.title")
 project = current_project()
 if project:
-    if st.button(t("report.generate"), type="primary"):
+    if st.button(t("report.generate"), type="primary", key="report_generate"):
         from geosurrogate.reporting.report import generate_report
 
         path = generate_report(project)
@@ -59,4 +59,4 @@ if project:
             zf.write(r, arcname=f"{Path(project.root).name}/report/{r.name}")
     st.download_button(t("report.zip"), data=buf.getvalue(),
                        file_name=f"{Path(project.root).name}_results.zip",
-                       type="primary")
+                       type="primary", key="dl_zip")

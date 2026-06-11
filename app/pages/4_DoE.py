@@ -27,7 +27,7 @@ if project:
     st.metric(t("doe.est_total"), f"{len(X) * sim_s / 3600:.1f} h "
               f"({len(X)} x {sim_s:.0f} s)")
 
-    if st.button(t("doe.preview"), type="primary"):
+    if st.button(t("doe.preview"), type="primary", key="doe_preview"):
         df = pd.DataFrame(X, columns=cfg.var_ids)
         df["source"] = labels
         if cfg.dims == 2:

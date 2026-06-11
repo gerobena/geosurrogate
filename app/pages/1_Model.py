@@ -35,7 +35,7 @@ if project:
             st.markdown(f"**{t('model.preflight')}**")
             st.caption(t("model.preflight_note"))
             smoke = st.checkbox(t("model.preflight_smoke"), value=True)
-            if st.button(t("model.preflight_run"), type="primary"):
+            if st.button(t("model.preflight_run"), type="primary", key="preflight_run"):
                 args = ["check", str(project.root)]
                 if smoke:
                     args.append("--simulate")

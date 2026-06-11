@@ -14,11 +14,11 @@ if project:
 
     col_a, col_b = st.columns([1, 1])
     with col_a:
-        if st.button(t("train.start"), type="primary"):
+        if st.button(t("train.start"), type="primary", key="train_start"):
             pid = runner.launch_detached(project.root)
             st.success(t("train.launched", pid=pid))
     with col_b:
-        if st.button(t("train.pause")):
+        if st.button(t("train.pause"), key="train_pause"):
             runner.request_pause(project.root)
             st.warning(t("train.pause_req"))
 

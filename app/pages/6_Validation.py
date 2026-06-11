@@ -52,7 +52,7 @@ if project:
                 _progress_bar(prog)
             elif not m:
                 st.write(t("common.not_available"))
-            if st.button(t("val.run_loocv"), disabled=prog is not None):
+            if st.button(t("val.run_loocv"), key="run_loocv", disabled=prog is not None):
                 launch_cli(project, ["validate", str(project.root), "--loocv"],
                            "validate")
                 st.info(t("val.launched"))
@@ -116,7 +116,7 @@ if project:
                                     text=t("val.testset_progress", done=done,
                                            name=p.name))
                     n = st.number_input("n", min_value=10, max_value=500, value=80)
-                    if st.button(t("val.testset_run")):
+                    if st.button(t("val.testset_run"), key="run_testset"):
                         launch_cli(project, ["testset", str(project.root),
                                              "--n", str(int(n))], "testset")
                         st.info(t("val.launched"))
@@ -143,7 +143,7 @@ if project:
                 stage_progress_bar(mprog)
             elif not m:
                 st.write(t("common.not_available"))
-            if st.button(t("val.run_massive"),
+            if st.button(t("val.run_massive"), key="run_massive",
                          disabled=(source_args is None or mprog is not None)):
                 launch_cli(project, ["validate", str(project.root), "--no-loocv",
                                      "--massive", *source_args], "validate")
@@ -164,7 +164,7 @@ if project:
                 _progress_bar(prog)
             elif not m:
                 st.write(t("common.not_available"))
-            if st.button(t("val.run_ks"),
+            if st.button(t("val.run_ks"), key="run_ks",
                          disabled=(source_args is None or prog is not None)):
                 launch_cli(project, ["validate", str(project.root), "--no-loocv",
                                      "--ks", *source_args], "validate")

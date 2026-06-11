@@ -38,7 +38,7 @@ with tab_open:
                          "updated": state.get("updated_at", "-")})
         st.dataframe(pd.DataFrame(rows), hide_index=True, width="stretch")
         choice = st.selectbox(t("common.project"), options=[p.name for p in projects])
-        if st.button(t("home.open_btn"), type="primary"):
+        if st.button(t("home.open_btn"), type="primary", key="open_selected"):
             st.session_state["project_root"] = str(RUNS_DIR / choice)
             st.rerun()
     else:
@@ -56,7 +56,7 @@ with tab_new:
         t("home.demo_case"), options=list(cases),
         format_func=lambda c: f"{c} - {cases[c].get('title')} "
                               f"({cases[c].get('dims')}D, pool {cases[c].get('points')})")
-    if st.button(t("home.create_btn"), type="primary"):
+    if st.button(t("home.create_btn"), type="primary", key="create_demo"):
         cfg = load_case_config(case_id)
         workdir = RUNS_DIR / f"{case_id}_{dt.datetime.now():%Y%m%d_%H%M%S}"
         Project.create(workdir, cfg)
@@ -82,7 +82,7 @@ with tab_fez:
     if staged_path:
         st.caption(f"`{Path(staged_path).name}` "
                    f"({Path(staged_path).stat().st_size / 1e6:.1f} MB)")
-        if st.button(t("home.fez_detect")):
+        if st.button(t("home.fez_detect"), key="fez_detect"):
             from geosurrogate.solvers.rs2 import (RS2ConnectionError,
                                                   RS2NotAvailable,
                                                   discover_materials)
@@ -138,7 +138,7 @@ with tab_fez:
             budget = c2.number_input(t("home.fez_budget"), min_value=rec["design_size"],
                                      value=rec["budget"], step=5)
 
-            if st.button(t("home.fez_create"), type="primary"):
+            if st.button(t("home.fez_create"), type="primary", key="fez_create"):
                 try:
                     variables = wizard.rows_to_variables(edited)
                 except ValueError as e:

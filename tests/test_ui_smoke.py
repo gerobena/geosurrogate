@@ -37,6 +37,26 @@ def test_page_renders_with_project(page, demo_project):
     assert not at.exception
 
 
+def test_every_button_has_an_explicit_key():
+    """Streamlit derives widget ids from label+params; two buttons with the
+    same translated label collide (StreamlitDuplicateElementId) - tabs render
+    all their content at once. Enforce an explicit key on every button."""
+    import ast
+
+    offenders = []
+    for path in [APP / "Home.py", *sorted((APP / "pages").glob("*.py"))]:
+        tree = ast.parse(path.read_text(encoding="utf-8"))
+        for node in ast.walk(tree):
+            if (isinstance(node, ast.Call)
+                    and isinstance(node.func, ast.Attribute)
+                    and node.func.attr in ("button", "download_button")
+                    and isinstance(node.func.value, ast.Name)
+                    and node.func.value.id == "st"):
+                if not any(kw.arg == "key" for kw in node.keywords):
+                    offenders.append(f"{path.name}:{node.lineno}")
+    assert not offenders, f"buttons without explicit key: {offenders}"
+
+
 def test_training_page_shows_trained_banner(tmp_path):
     root = tmp_path / "proj"
     project = Project.create(root, load_case_config("slope_2d"))
