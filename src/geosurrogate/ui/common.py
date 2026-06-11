@@ -95,6 +95,40 @@ def tail_file(path: Path, n: int = 15) -> str:
     return "\n".join(lines[-n:])
 
 
+# --- stage-based progress (single long R call: MCS, massive validation) ------
+STAGE_FRACTION = {"sampling": 0.08, "predicting": 0.55, "finalizing": 0.92}
+
+
+def running_stage(path: Path, max_age_s: int = 3600) -> dict | None:
+    """Stage-progress data of an in-flight long analysis, or None.
+
+    The timestamp cannot tick during the long R call, so staleness is judged
+    from the start time with a generous cap instead of the last update.
+    """
+    import datetime as dt
+
+    data = load_json(path)
+    if not data:
+        return None
+    try:
+        started = dt.datetime.fromisoformat(data["started"])
+    except (KeyError, ValueError):
+        return None
+    elapsed = (dt.datetime.now() - started).total_seconds()
+    if elapsed > max_age_s:
+        return None
+    data["elapsed"] = elapsed
+    return data
+
+
+def stage_progress_bar(data: dict) -> None:
+    mins, secs = divmod(int(data.get("elapsed", 0)), 60)
+    stage = data.get("stage", "predicting")
+    st.progress(STAGE_FRACTION.get(stage, 0.5),
+                text=t("common.running_stage", stage=t(f"stage.{stage}"),
+                       elapsed=f"{mins:d}:{secs:02d}"))
+
+
 # --- background launchers ---------------------------------------------------
 def launch_cli(project: Project, args: list[str], tag: str) -> int:
     """Run a geosurrogate CLI command detached; output goes to log/<tag>.out."""

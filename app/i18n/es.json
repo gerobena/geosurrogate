@@ -97,5 +97,9 @@
   "val.upload": "Subir resultados etiquetados (.xlsx / .csv)",
   "val.upload_ok": "Archivo aceptado: {n} filas guardadas como {name}",
   "val.upload_bad": "Archivo invalido - faltan columnas: {cols}",
-  "val.generate": "Generar con el solver FEM"
+  "val.generate": "Generar con el solver FEM",
+  "common.running_stage": "Ejecutando: {stage} ({elapsed} transcurrido)",
+  "stage.sampling": "muestreando las distribuciones de entrada",
+  "stage.predicting": "ajustando el GP y prediciendo",
+  "stage.finalizing": "calculando metricas y figuras"
 }

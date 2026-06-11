@@ -28,8 +28,17 @@ def run_massive(project: Project, test_xlsx: Path | None = None,
     project.log(f"Massive validation: {len(X)} training points vs "
                 f"{len(test)} independent FEM results")
 
+    import datetime as dt
     import os
     import shutil
+    out_dir = project.root / "validation"
+    out_dir.mkdir(exist_ok=True)
+    progress_path = out_dir / "massive_progress.json"
+    progress_path.write_text(json.dumps(
+        {"stage": "predicting",
+         "started": dt.datetime.now().isoformat(timespec="seconds"),
+         "ts": dt.datetime.now().isoformat(timespec="seconds")}),
+        encoding="utf-8")
     workdir = project.surrogate_dir / f"work_massive_{os.getpid()}"
     try:
         mean, s2 = fit_predict(
@@ -42,6 +51,7 @@ def run_massive(project: Project, test_xlsx: Path | None = None,
         )
     finally:
         shutil.rmtree(workdir, ignore_errors=True)
+        progress_path.unlink(missing_ok=True)
 
     actual = test["srf"].to_numpy(dtype=float)
     resid = actual - mean

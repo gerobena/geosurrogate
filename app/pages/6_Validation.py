@@ -4,7 +4,8 @@ import pandas as pd
 import streamlit as st
 
 from geosurrogate.ui.common import (current_project, init_page, launch_cli,
-                                    load_json, show_image, t, tail_file)
+                                    load_json, running_stage, show_image,
+                                    stage_progress_bar, t, tail_file)
 
 init_page("val.title")
 project = current_project()
@@ -126,6 +127,7 @@ if project:
         # --- massive validation -----------------------------------------------
         with st.container(border=True):
             st.markdown(f"**{t('val.massive')}**")
+            mprog = running_stage(val_dir / "massive_progress.json", max_age_s=1800)
             m = load_json(val_dir / "massive_metrics.json")
             if m:
                 verdict = t("val.reject_h0") if m["ks_h0_rejected_at_005"] \
@@ -137,9 +139,12 @@ if project:
                 cols[3].metric("p-value", f"{m['ks_pvalue']:.3f}")
                 st.caption(verdict)
                 show_image(val_dir / "massive_panel.png")
-            else:
+            if mprog:
+                stage_progress_bar(mprog)
+            elif not m:
                 st.write(t("common.not_available"))
-            if st.button(t("val.run_massive"), disabled=source_args is None):
+            if st.button(t("val.run_massive"),
+                         disabled=(source_args is None or mprog is not None)):
                 launch_cli(project, ["validate", str(project.root), "--no-loocv",
                                      "--massive", *source_args], "validate")
                 st.info(t("val.launched"))

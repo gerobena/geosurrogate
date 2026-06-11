@@ -97,5 +97,9 @@
   "val.upload": "Upload labeled results (.xlsx / .csv)",
   "val.upload_ok": "File accepted: {n} rows saved as {name}",
   "val.upload_bad": "Invalid file - missing columns: {cols}",
-  "val.generate": "Generate with the FEM solver"
+  "val.generate": "Generate with the FEM solver",
+  "common.running_stage": "Running: {stage} ({elapsed} elapsed)",
+  "stage.sampling": "sampling the input distributions",
+  "stage.predicting": "fitting the GP and predicting",
+  "stage.finalizing": "computing metrics and figures"
 }

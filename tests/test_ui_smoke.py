@@ -66,6 +66,24 @@ def test_validation_page_shows_progress_and_disables_button(tmp_path):
     assert not at.exception
 
 
+def test_exploitation_page_shows_stage_progress(tmp_path):
+    import datetime as dt
+    import json as _json
+
+    root = tmp_path / "proj"
+    project = Project.create(root, load_case_config("slope_2d"))
+    exp_dir = root / "exploitation"
+    exp_dir.mkdir()
+    now = dt.datetime.now().isoformat(timespec="seconds")
+    (exp_dir / "mcs_progress.json").write_text(_json.dumps(
+        {"stage": "predicting", "started": now, "ts": now}), encoding="utf-8")
+    at = AppTest.from_file(str(APP / "pages" / "7_Exploitation.py"),
+                           default_timeout=30)
+    at.session_state["project_root"] = str(root)
+    at.run()
+    assert not at.exception
+
+
 def test_training_page_renders_mid_doe_phase(tmp_path):
     """Regression: right after Start, events exist but none carries error_max
     yet (DoE phase) - the live chart must not crash on the missing column."""
