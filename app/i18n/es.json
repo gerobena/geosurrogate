@@ -101,5 +101,16 @@
   "common.running_stage": "Ejecutando: {stage} ({elapsed} transcurrido)",
   "stage.sampling": "muestreando las distribuciones de entrada",
   "stage.predicting": "ajustando el GP y prediciendo",
-  "stage.finalizing": "calculando metricas y figuras"
+  "stage.finalizing": "calculando metricas y figuras",
+  "next.title": "Siguiente paso",
+  "next.start_training": "Iniciar el entrenamiento",
+  "next.resume_training": "Reanudar el entrenamiento",
+  "next.watch_training": "Entrenamiento en curso: ver en vivo",
+  "next.validating": "Auto-validacion (LOOCV) en curso",
+  "next.run_loocv": "Validar el modelo (LOOCV)",
+  "next.independent": "Validacion independiente (masiva + K-S)",
+  "next.exploit": "Ejecutar la explotacion Monte Carlo",
+  "next.report": "Generar el informe HTML",
+  "next.done": "Flujo completo: revisa y descarga los resultados",
+  "train.auto_validating": "Auto-validacion LOOCV en curso"
 }

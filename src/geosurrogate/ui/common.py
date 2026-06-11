@@ -36,6 +36,31 @@ def t(key: str, **fmt) -> str:
     return text.format(**fmt) if fmt else text
 
 
+# --- guided flow: recommended next step --------------------------------------
+def compute_next_step(project: Project) -> tuple[str, str]:
+    """(page_path, i18n_label) for the recommended next action of a project."""
+    state = project.read_state()
+    status, phase = state.get("status"), state.get("phase")
+    if status == "running":
+        if phase == "auto_validation":
+            return ("pages/6_Validation.py", "next.validating")
+        return ("pages/5_Training.py", "next.watch_training")
+    if status == "paused" or status == "error":
+        return ("pages/5_Training.py", "next.resume_training")
+    if status != "finished" or not state.get("n_samples"):
+        return ("pages/5_Training.py", "next.start_training")
+    val = project.root / "validation"
+    if not (val / "loocv_metrics.json").exists():
+        return ("pages/6_Validation.py", "next.run_loocv")
+    if not (val / "massive_metrics.json").exists():
+        return ("pages/6_Validation.py", "next.independent")
+    if not (project.root / "exploitation" / "mcs_metrics.json").exists():
+        return ("pages/7_Exploitation.py", "next.exploit")
+    if not list((project.root / "report").glob("report_*.html")):
+        return ("pages/8_Report.py", "next.report")
+    return ("pages/8_Report.py", "next.done")
+
+
 # --- page scaffolding -------------------------------------------------------
 def init_page(title_key: str) -> None:
     st.set_page_config(page_title=f"{t(title_key)} - geosurrogate", layout="wide")
@@ -44,6 +69,17 @@ def init_page(title_key: str) -> None:
                      format_func=lambda x: {"en": "English", "es": "Español"}[x])
         root = st.session_state.get("project_root")
         st.caption(f"{t('common.project')}: " + (str(root) if root else "-"))
+        if root:
+            try:
+                page, label = compute_next_step(Project.open(root))
+                st.markdown(f"**{t('next.title')}**")
+                try:
+                    st.page_link(page, label=t(label))
+                except Exception:
+                    # AppTest runs pages standalone, without a page registry
+                    st.caption(t(label))
+            except FileNotFoundError:
+                pass
     st.title(t(title_key))
 
 

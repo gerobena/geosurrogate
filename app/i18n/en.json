@@ -101,5 +101,16 @@
   "common.running_stage": "Running: {stage} ({elapsed} elapsed)",
   "stage.sampling": "sampling the input distributions",
   "stage.predicting": "fitting the GP and predicting",
-  "stage.finalizing": "computing metrics and figures"
+  "stage.finalizing": "computing metrics and figures",
+  "next.title": "Next step",
+  "next.start_training": "Start training",
+  "next.resume_training": "Resume training",
+  "next.watch_training": "Training in progress - watch live",
+  "next.validating": "Auto-validation (LOOCV) running",
+  "next.run_loocv": "Validate the model (LOOCV)",
+  "next.independent": "Independent validation (massive + K-S)",
+  "next.exploit": "Run the Monte Carlo exploitation",
+  "next.report": "Generate the HTML report",
+  "next.done": "Flow complete - review and download results",
+  "train.auto_validating": "Automatic LOOCV validation in progress"
 }

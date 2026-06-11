@@ -56,3 +56,10 @@ def test_slope_2d_short_run(tmp_path):
     # every demo SRF must come from the real pool
     lookup = pd.read_csv(demo_cases_dir() / "slope_2d" / "lookup.csv")
     assert set(ds["srf"].round(6)) <= set(lookup["srf"].round(6))
+
+    # auto-LOOCV must have validated the trained model without user action
+    metrics = json.loads(
+        (project.root / "validation" / "loocv_metrics.json").read_text())
+    assert metrics["n"] == int((ds["status"] == "ok").sum())
+    assert (project.root / "validation" / "loocv_panel.png").exists()
+    assert project.read_state().get("phase") == "done"

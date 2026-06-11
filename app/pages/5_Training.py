@@ -3,7 +3,8 @@ import datetime as dt
 import plotly.graph_objects as go
 import streamlit as st
 
-from geosurrogate.ui.common import current_project, init_page, load_events, t
+from geosurrogate.ui.common import (current_project, init_page, load_events,
+                                    load_json, t)
 from geosurrogate.activelearning import runner
 
 init_page("train.title")
@@ -39,7 +40,8 @@ if project:
         if n_done or running:
             st.progress(min(n_done / budget, 1.0),
                         text=t("train.progress", done=n_done, total=budget))
-        if state.get("status") == "finished":
+        phase = state.get("phase")
+        if state.get("status") == "finished" or phase == "auto_validation":
             reason = state.get("stop_reason", "")
             if reason == "converged":
                 st.success(t("train.done_converged"))
@@ -49,6 +51,14 @@ if project:
             if reason == "converged" and not st.session_state.get(flag):
                 st.balloons()
                 st.session_state[flag] = True
+        if phase == "auto_validation":
+            lp = load_json(project.root / "validation" / "loocv_progress.json")
+            if lp:
+                st.progress(min(lp["done"] / max(lp["total"], 1), 1.0),
+                            text=f"{t('train.auto_validating')} "
+                                 f"({lp['done']}/{lp['total']})")
+            else:
+                st.caption(t("train.auto_validating"))
 
         if running and state.get("updated_at"):
             age = (dt.datetime.now()

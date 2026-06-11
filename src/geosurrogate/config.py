@@ -127,6 +127,9 @@ class ALConfig(BaseModel):
     refresh_candidates: bool = True
     validation_grid: ValidationGridConfig = ValidationGridConfig()
     seed: int = 123
+    # Launch LOOCV automatically when training finishes (cheap: it needs no
+    # independent data, and the user lands on a validated model).
+    auto_loocv: bool = True
 
 
 class MCMCConfig(BaseModel):

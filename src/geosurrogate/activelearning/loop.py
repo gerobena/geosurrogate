@@ -53,6 +53,20 @@ def run(project: Project) -> str:
         _phase_doe(project, solver)
         reason = _phase_al(project, solver)
         status = "paused" if reason == "paused" else "finished"
+        if (status == "finished" and cfg.active_learning.auto_loocv
+                and reason in ("converged", "budget_exhausted",
+                               "max_iterations", "pool_exhausted")):
+            # The model is trained; LOOCV needs no independent data, so the
+            # user lands on an already-validated surrogate.
+            project.write_state(phase="auto_validation", status="running",
+                                stop_reason=reason)
+            project.append_event("phase_change", phase="auto_validation")
+            project.log("auto-validation: running LOOCV on the trained model")
+            try:
+                from ..validation import run_loocv
+                run_loocv(project)
+            except Exception as e:  # non-fatal: the training result stands
+                project.log(f"auto-LOOCV failed (non-fatal): {e}")
         project.write_state(phase="done" if status == "finished" else "active_learning",
                             status=status, stop_reason=reason)
         project.append_event("run_finished", reason=reason)
