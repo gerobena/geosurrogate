@@ -50,7 +50,7 @@ t2 <- Sys.time()
 alc_s <- "null"
 if (do_alc) {
   cand_idx <- which(pred$set == "cand")
-  a <- ALC(fit, x_new = Xp[cand_idx, , drop = FALSE])
+  a <- ALC(fit, x_new = Xp[cand_idx, , drop = FALSE], cores = n_cores)
   write.csv(data.frame(alc = a$value), file.path(workdir, "alc.csv"), row.names = FALSE)
   alc_s <- sprintf("%.2f", as.numeric(difftime(Sys.time(), t2, units = "secs")))
 }
