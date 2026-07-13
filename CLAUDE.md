@@ -120,12 +120,13 @@ y el backlog de ARQUITECTURA §15. Detalle y números en ESTADO.md.
 
 ## 5. Lo que falta (orden sugerido)
 
-1. **F5 — publicación:** ANTES del primer push, configurar la identidad
-   git real del autor y amendar (la actual es provisional:
-   `geovanny.benavides@example.com`); crear repo **privado** en GitHub
-   (autenticación pendiente: el autor no quiso conectar `gh` aún); README
-   escaparate con capturas/GIF; CI (GitHub Actions con R, sin RS2 — el
-   DemoSolver permite el e2e completo).
+1. **F5 — publicación:** identidad git ya corregida (todo el historial
+   reescrito al noreply de GitHub `58923459+gerobena@users.noreply.github.com`;
+   rama de respaldo `backup-before-identity-rewrite` — borrable tras validar
+   el push). Falta: crear repo **privado** en GitHub (autenticación
+   pendiente: el autor no quiso conectar `gh` aún); README escaparate con
+   capturas/GIF; CI (GitHub Actions con R, sin RS2 — el DemoSolver permite
+   el e2e completo).
 2. **Backlog ARQUITECTURA §15:** informe autogenerado al completar la
    validación; replay animado de `events.jsonl`; visor de geometría del
    `.fez`; análisis de sensibilidad (tornado) en exploitation; familia

@@ -69,7 +69,7 @@ Complementa a CLAUDE.md (instrucciones de sesión) y ARQUITECTURA.md (diseño).
 
 ## 5. Pendientes (al detalle)
 
-1. **F5 publicación**: identidad git real + amend ANTES del push (actual: `Geovanny Benavides <geovanny.benavides@example.com>`, provisional); repo privado GitHub (el autor pospuso conectar `gh`/credenciales); README escaparate (el actual es stub) con capturas/GIF del dashboard; CI GitHub Actions (ubuntu + R + deepgp; el e2e corre sin RS2 gracias al DemoSolver).
+1. **F5 publicación**: identidad git ya corregida (historial completo reescrito con `git filter-branch` al noreply `Geovanny Benavides <58923459+gerobena@users.noreply.github.com>`; contenido idéntico, verificado; respaldo en rama `backup-before-identity-rewrite`); `.vscode/` ya en `.gitignore`. Falta: repo privado GitHub (el autor pospuso conectar `gh`/credenciales); README escaparate (el actual es stub) con capturas/GIF del dashboard; CI GitHub Actions (ubuntu + R + deepgp; el e2e corre sin RS2 gracias al DemoSolver).
 2. **Backlog ARQ §15**: informe auto al completar validación · replay animado de `events.jsonl` · visor de geometría del `.fez` · sensibilidad (tornado) en exploitation · triangular en el editor del wizard · n recomendado de testset en UI · casos demo `cliff_6d`/`cliff_8d` (¡decisión de procedencia pendiente! usan el modelo del acantilado real del TFM).
 3. Menor: PoF ilustrativa en demo 3D (threshold 1,40 → PoF ≈ 0,20) si el dueño lo pide.
 4. Contexto TFM (solo si el autor lo trae): la defensa es junio 2026; el repo del TFM tiene su propio CLAUDE.md y flujo de redacción, ajeno a este proyecto.
