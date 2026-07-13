@@ -23,3 +23,7 @@ Thumbs.db
 
 # Editor settings (local to each machine)
 .vscode/
+
+# Local project-memory / working notes (kept out of the public repo)
+CLAUDE.md
+ESTADO.md

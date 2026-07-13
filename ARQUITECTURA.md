@@ -1,6 +1,6 @@
 # Arquitectura del prototipo — "geosurrogate" (nombre provisional)
 
-**Fecha:** 10-06-2026 · **Estado:** propuesta para revisión del autor · **Origen:** TFM RS2↔deepgp (G:\TFM_GeovannyBenavides\RS2Scripting_VSC)
+**Fecha:** 10-06-2026 · **Estado:** propuesta para revisión del autor · **Origen:** metodología RS2↔deepgp del TFM del autor (Máster Ing. Geológica, UPM)
 
 Plataforma de análisis de fiabilidad para estabilidad de taludes: construye un *surrogate model* de Procesos Gaussianos con *active learning* sobre un modelo FEM (RS2 en v1), lo valida y lo explota para análisis probabilísticos masivos. Dashboard local para máquinas que ya disponen de licencia RS2; modo demo autocontenido que no requiere RS2 ni R.
 

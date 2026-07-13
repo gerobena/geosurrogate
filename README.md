@@ -127,7 +127,6 @@ dimensionality → train, validate, exploit, and export an HTML report.
 ## Documentation
 
 - [ARQUITECTURA.md](ARQUITECTURA.md) — full architecture and design decisions
-- [CLAUDE.md](CLAUDE.md) / [ESTADO.md](ESTADO.md) — project conventions and detailed status
 
 ## Roadmap
 

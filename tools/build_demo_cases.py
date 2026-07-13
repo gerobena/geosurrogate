@@ -1,19 +1,23 @@
 """One-off packaging of demo case lookup tables from TFM result files.
 
-Reads the TFM workspace READ-ONLY and writes demo_cases/<id>/lookup.csv.
-Provenance is recorded here on purpose: this script *is* the documentation
-of where every demo number comes from.
+Reads the author's TFM workspace READ-ONLY and writes demo_cases/<id>/lookup.csv.
+Provenance is recorded here on purpose: this script *is* the documentation of
+where every demo number comes from. It is a maintenance tool — the packaged
+demos under demo_cases/ are self-contained and need neither this script nor the
+source workspace to run.
 
-Run:  .venv/Scripts/python tools/build_demo_cases.py
+Point it at the source workspace with the GEOSURROGATE_TFM_DIR env var:
+  GEOSURROGATE_TFM_DIR=/path/to/tfm  .venv/Scripts/python tools/build_demo_cases.py
 """
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 import pandas as pd
 
-TFM = Path(r"G:\TFM_GeovannyBenavides\RS2Scripting_VSC")
+TFM = Path(os.environ.get("GEOSURROGATE_TFM_DIR", "tfm_workspace"))
 REPO = Path(__file__).resolve().parents[1]
 
 CASES = {
