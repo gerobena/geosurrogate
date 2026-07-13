@@ -1,7 +1,7 @@
 import pytest
 from pydantic import ValidationError
 
-from geosurrogate.config import ProjectConfig
+from geosurrogate.config import ENV_RSCRIPT, ProjectConfig, _WINDOWS_RSCRIPT_DEFAULT
 
 
 def _minimal(**overrides):
@@ -62,3 +62,26 @@ def test_distribution_family_params_enforced():
     bad["variables"][0]["distribution"] = {"family": "triangular", "low": 1.0, "high": 2.0}
     with pytest.raises(ValidationError):
         ProjectConfig.model_validate(bad)
+
+
+def test_rscript_default_falls_back_to_windows_path(monkeypatch):
+    monkeypatch.delenv(ENV_RSCRIPT, raising=False)
+    cfg = ProjectConfig.model_validate(_minimal())
+    assert cfg.solver.rscript_path == _WINDOWS_RSCRIPT_DEFAULT
+
+
+def test_rscript_env_override_honoured(monkeypatch, tmp_path):
+    # an explicit path in the env is used verbatim (CI / non-Windows machines)
+    fake = tmp_path / "Rscript"
+    fake.write_text("")
+    monkeypatch.setenv(ENV_RSCRIPT, str(fake))
+    cfg = ProjectConfig.model_validate(_minimal())
+    assert cfg.solver.rscript_path == fake
+
+
+def test_explicit_rscript_path_beats_env(monkeypatch, tmp_path):
+    monkeypatch.setenv(ENV_RSCRIPT, str(tmp_path / "from_env"))
+    cfg = ProjectConfig.model_validate(
+        _minimal(solver={"type": "demo", "demo_case": "slope_2d",
+                         "rscript_path": r"C:\explicit\Rscript.exe"}))
+    assert str(cfg.solver.rscript_path) == r"C:\explicit\Rscript.exe"

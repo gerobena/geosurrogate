@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import os
+import shutil
 from pathlib import Path
 from typing import Literal
 
@@ -9,6 +11,24 @@ import yaml
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 SCHEMA_VERSION = 1
+
+ENV_RSCRIPT = "GEOSURROGATE_RSCRIPT"
+# Fallback when no project.yaml value and no env override: the author's Windows
+# install. Kept as the last resort so behaviour is unchanged on that machine.
+_WINDOWS_RSCRIPT_DEFAULT = Path(r"C:\Program Files\R\R-4.5.3\bin\Rscript.exe")
+
+
+def _default_rscript() -> Path:
+    """Rscript location for projects that don't pin one explicitly.
+
+    Honours the GEOSURROGATE_RSCRIPT env var (a bare command name is resolved
+    against PATH), which lets CI and non-Windows users point at their R without
+    editing every case config. Falls back to the Windows default otherwise.
+    """
+    env = os.environ.get(ENV_RSCRIPT)
+    if env:
+        return Path(shutil.which(env) or env)
+    return _WINDOWS_RSCRIPT_DEFAULT
 
 
 class Distribution(BaseModel):
@@ -76,7 +96,7 @@ class SolverConfig(BaseModel):
     type: Literal["rs2", "demo"]
     model_file: Path | None = None
     demo_case: str | None = None
-    rscript_path: Path = Path(r"C:\Program Files\R\R-4.5.3\bin\Rscript.exe")
+    rscript_path: Path = Field(default_factory=_default_rscript)
     # RS2 location: by default RS2Scripting auto-detects the most recent RS2
     # installation via the Windows registry. These overrides are only needed
     # on machines with non-standard installs or multiple RS2 versions.
