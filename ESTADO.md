@@ -1,6 +1,6 @@
 # ESTADO.md — memoria detallada del proyecto
 
-Última actualización: **11-06-2026** (commit `b3a2cfe`, 16 commits, 46 tests).
+Última actualización: **13-07-2026** (commit `757f3bc`, 46 tests).
 Complementa a CLAUDE.md (instrucciones de sesión) y ARQUITECTURA.md (diseño).
 
 ## 1. Cronología de fases (todas verificadas con tests)
@@ -20,6 +20,7 @@ Complementa a CLAUDE.md (instrucciones de sesión) y ARQUITECTURA.md (diseño).
 | `c569a0a` | **Flujo guiado**: auto-LOOCV al terminar el entrenamiento (fase `auto_validation` visible) + breadcrumb «Siguiente paso» navegable en todas las páginas |
 | `90fbffc` | **Viaje desde cero en la UI**: pestaña «New from FEM model (.fez)» (upload → `discover_materials` one-shot → editor de variables con `st.data_editor` → DoE recomendado por D → crear proyecto con el `.fez` copiado dentro) + botón Preflight en página Model |
 | `b3a2cfe` | Fix `StreamlitDuplicateElementId` (las pestañas renderizan todo a la vez): `key=` único en TODOS los botones + test AST que lo exige |
+| `757f3bc` | **ALC paralelo** (`cores=` en el worker R): 153,7 s → 12,0 s (12,8×) sobre 1000 candidatos en el caso 3D real; ranking top-5 idéntico, e2e verde. Hallazgo colateral: los valores ALC de deepgp 1.2.1 salen denormales (~1e-315) también en producción — underflow preexistente, ranking se preserva; investigación pendiente |
 
 ## 2. Resultados verificados (los números que avalan el producto)
 
@@ -36,7 +37,7 @@ Complementa a CLAUDE.md (instrucciones de sesión) y ARQUITECTURA.md (diseño).
 
 ### Caso real 3D (Embankment, 3 variables; `runs/embankment_3d`, NO borrar)
 - Variables: coh y φ de `embankment` + coh de `sand`; φ de `sand` fija = 35° (= media TFM, verificado).
-- Entrenamiento: **convergió con 29 sims** (27 factorial + 2 AL), error 0,0054 < tol 0,01. FEM ~3,2 min/sim (esquinas) vs 144 s el humo central. ALC sobre 1000 candidatos ≈ 150 s/iter (candidato a optimizar).
+- Entrenamiento: **convergió con 29 sims** (27 factorial + 2 AL), error 0,0054 < tol 0,01. FEM ~3,2 min/sim (esquinas) vs 144 s el humo central. ALC sobre 1000 candidatos ≈ 150 s/iter (optimizado en `757f3bc`: ahora ~12 s con `cores=`).
 - LOOCV: R² = 0,9841, RMSE = 0,011, cobertura 90 % (n = 29).
 - Testset: 80/80 ok, 3 h 06 min, cero fallos (`validation/testset_n80_seed777.xlsx`).
 - Masiva: **R² = 0,9880**, RMSE = 0,0068, K-S D = 0,075, p = 0,979 (no se rechaza H0).
