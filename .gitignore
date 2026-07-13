@@ -20,3 +20,6 @@ runs/
 # OS noise
 Thumbs.db
 .DS_Store
+
+# Editor settings (local to each machine)
+.vscode/
