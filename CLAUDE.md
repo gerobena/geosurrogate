@@ -29,12 +29,13 @@ Carlo masivo → probabilidad de fallo PoF). Dashboard Streamlit + CLI.
 ## 2. Estado en tres líneas
 
 Fases F1 (núcleo) + F2 (dashboard 8 páginas) + F3 (validación/explotación)
-+ F4 (adaptador RS2 real) **completas y verificadas** (46 tests, incluido
-e2e con deepgp real), más el flujo guiado (auto-LOOCV al converger,
-breadcrumbs) y el viaje desde cero (subida de `.fez`, descubrimiento de
-materiales, editor de variables, preflight en UI). Tres casos demo
-empaquetados con resultados FEM reales. **Falta:** F5 (publicación GitHub)
-y el backlog de ARQUITECTURA §15. Detalle y números en ESTADO.md.
++ F4 (adaptador RS2 real) + **F5 (publicación)** completas y verificadas
+(49 tests, incluido e2e con deepgp real), más el flujo guiado (auto-LOOCV
+al converger, breadcrumbs) y el viaje desde cero (subida de `.fez`,
+descubrimiento de materiales, editor de variables, preflight en UI). Tres
+casos demo empaquetados con resultados FEM reales. Repo privado en
+**github.com/gerobena/geosurrogate** con CI en verde (Ubuntu + R + deepgp).
+**Falta:** el backlog de ARQUITECTURA §15. Detalle y números en ESTADO.md.
 
 ## 3. Cómo trabajar aquí
 
@@ -120,16 +121,12 @@ y el backlog de ARQUITECTURA §15. Detalle y números en ESTADO.md.
 
 ## 5. Lo que falta (orden sugerido)
 
-1. **F5 — publicación:** identidad git ya corregida (todo el historial
-   reescrito al noreply de GitHub `58923459+gerobena@users.noreply.github.com`;
-   rama de respaldo `backup-before-identity-rewrite` — borrable tras validar
-   el push). README escaparate ya hecho (figuras reales en `assets/`). CI ya
-   escrito (`.github/workflows/ci.yml`: Ubuntu + R 4.5.3 vía PPM binario +
-   deepgp; corre la suite completa incl. e2e con `GEOSURROGATE_RSCRIPT=Rscript`
-   — nueva env var que hace `rscript_path` agnóstico al SO). Falta: crear repo
-   **privado** en GitHub (autenticación pendiente: el autor no quiso conectar
-   `gh` aún) y hacer el primer push (que dispara y valida el CI); opcional:
-   capturas/GIF del dashboard en vivo para el README.
+1. ~~**F5 — publicación**~~ **HECHA** (13-07-2026): repo privado
+   `github.com/gerobena/geosurrogate`, CI en verde (49/49 en Ubuntu, e2e
+   deepgp real, `GEOSURROGATE_RSCRIPT` hace `rscript_path` agnóstico al SO),
+   commits vinculados al perfil (noreply). `gh` instalado y autenticado.
+   Opcional restante: capturas/GIF del dashboard en el README; borrar la
+   rama local `backup-before-identity-rewrite` cuando el autor confirme.
 2. **Backlog ARQUITECTURA §15:** informe autogenerado al completar la
    validación; replay animado de `events.jsonl`; visor de geometría del
    `.fez`; análisis de sensibilidad (tornado) en exploitation; familia
