@@ -9,10 +9,10 @@ the **probability of failure (PoF)** of a slope — at a fraction of the FEM cos
 ![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue)
 ![Surrogate: deepgp (R)](https://img.shields.io/badge/surrogate-deepgp%20%28R%29-276DC3)
 ![Dashboard: Streamlit](https://img.shields.io/badge/dashboard-Streamlit-FF4B4B)
-![Status: private prototype](https://img.shields.io/badge/status-private%20prototype-orange)
+![License: MIT](https://img.shields.io/badge/license-MIT-green)
 
-> **Status — private prototype.** Core, dashboard, validation/exploitation and the
-> real RS2 adapter are complete and verified (46 tests, including an end-to-end run
+> **Status — working prototype.** Core, dashboard, validation/exploitation and the
+> real RS2 adapter are complete and verified (49 tests, including an end-to-end run
 > against real `deepgp`). Design deep-dive in [ARQUITECTURA.md](ARQUITECTURA.md).
 
 ---
@@ -140,6 +140,6 @@ dimensionality → train, validate, exploit, and export an HTML report.
 Madrid. geosurrogate grew out of the reliability-analysis methodology in his MSc
 thesis (RS2 ↔ deepgp).
 
----
+## License
 
-*Private prototype — all rights reserved. Not yet licensed for redistribution.*
+Released under the [MIT License](LICENSE) — © 2026 Geovanny Benavides.
