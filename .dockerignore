@@ -1,0 +1,17 @@
+# Keep the build context small and the image clean.
+# (The Dockerfile also uses explicit COPYs, so nothing here leaks in anyway —
+# this mainly avoids shipping huge/irrelevant folders to the Docker daemon.)
+.git
+.github
+.venv
+runs
+models
+*.fez
+**/__pycache__
+*.pyc
+.pytest_cache
+*.egg-info
+.vscode
+CLAUDE.md
+ESTADO.md
+tests
