@@ -115,6 +115,7 @@
   "train.auto_validating": "Auto-validacion LOOCV en curso",
   "home.new_fez": "Nuevo desde modelo FEM (.fez)",
   "home.fez_intro": "Flujo desde cero: sube tu modelo de RS2, detecta sus materiales, selecciona las variables estocasticas y crea el proyecto. Requiere RS2 instalado y licenciado en esta maquina.",
+  "home.fez_unavailable": "Crear un proyecto desde tu propio modelo de RS2 requiere RS2 licenciado en una maquina Windows local, por lo que no se ofrece en este entorno. Los casos demo de arriba ejecutan el flujo completo sobre resultados reales de RS2 precalculados.",
   "home.fez_name": "Nombre del proyecto",
   "home.fez_upload": "Modelo RS2 (.fez)",
   "home.fez_detect": "Detectar materiales (arranca RS2, ~1 min)",

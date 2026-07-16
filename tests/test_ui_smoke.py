@@ -29,6 +29,19 @@ def test_home_renders_without_project():
     assert not at.exception
 
 
+def test_home_hides_the_rs2_journey_in_demo_mode(monkeypatch):
+    """The public demo container forces demo mode, where RS2 can never work.
+
+    Offering the from-zero tab there would send visitors down a path that only
+    ends in an error telling them to install a package that would not help.
+    """
+    monkeypatch.setenv("GEOSURROGATE_MODE", "demo")
+    at = AppTest.from_file(str(APP / "Home.py"), default_timeout=30)
+    at.run()
+    assert not at.exception
+    assert not at.file_uploader, "the .fez uploader must not be offered in demo mode"
+
+
 @pytest.mark.parametrize("page", PAGES, ids=[p.stem for p in PAGES])
 def test_page_renders_with_project(page, demo_project):
     at = AppTest.from_file(str(page), default_timeout=30)

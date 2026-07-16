@@ -115,6 +115,7 @@
   "train.auto_validating": "Automatic LOOCV validation in progress",
   "home.new_fez": "New from FEM model (.fez)",
   "home.fez_intro": "From-zero workflow: upload your RS2 model, detect its materials, select the stochastic variables and create the project. Requires RS2 installed and licensed on this machine.",
+  "home.fez_unavailable": "Building a project from your own RS2 model needs a licensed RS2 on a local Windows machine, so it is not offered in this environment. The demo cases above run the full workflow on precomputed real RS2 results.",
   "home.fez_name": "Project name",
   "home.fez_upload": "RS2 model (.fez)",
   "home.fez_detect": "Detect materials (starts RS2, ~1 min)",

@@ -10,6 +10,7 @@ import streamlit as st
 from geosurrogate.config import (ALConfig, DoEConfig, ProjectConfig,
                                  ProjectMeta, SolverConfig)
 from geosurrogate.project import Project
+from geosurrogate.solvers import rs2_supported_platform
 from geosurrogate.solvers.demo import load_case_config, load_registry
 from geosurrogate.ui import wizard
 from geosurrogate.ui.common import (RUNS_DIR, current_project, init_page,
@@ -18,8 +19,14 @@ from geosurrogate.ui.common import (RUNS_DIR, current_project, init_page,
 init_page("app.title")
 st.caption(t("app.tagline"))
 
-tab_open, tab_new, tab_fez = st.tabs([t("home.open"), t("home.new_demo"),
-                                      t("home.new_fez")])
+# The from-zero RS2 journey only exists where RS2 could actually run; in the
+# public demo container the tab is hidden rather than left to fail on click.
+show_fez = rs2_supported_platform()
+_labels = [t("home.open"), t("home.new_demo")]
+if show_fez:
+    _labels.append(t("home.new_fez"))
+_tabs = st.tabs(_labels)
+tab_open, tab_new = _tabs[0], _tabs[1]
 
 with tab_open:
     projects = list_projects()
@@ -63,8 +70,11 @@ with tab_new:
         st.session_state["project_root"] = str(workdir)
         st.success(t("home.created"))
         st.rerun()
+    if not show_fez:
+        st.caption(t("home.fez_unavailable"))
 
-with tab_fez:
+
+def _render_new_from_fez():
     st.caption(t("home.fez_intro"))
     name = st.text_input(t("home.fez_name"), value="")
     uploaded = st.file_uploader(t("home.fez_upload"), type=["fez"], key="fez_file")
@@ -168,6 +178,11 @@ with tab_fez:
                         st.session_state.pop(k, None)
                     st.success(t("home.fez_created"))
                     st.rerun()
+
+
+if show_fez:
+    with _tabs[2]:
+        _render_new_from_fez()
 
 project = st.session_state.get("project_root")
 if project:

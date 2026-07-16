@@ -13,6 +13,8 @@ version that corresponds to the user's RS2: pip install RS2Scripting==<ver>.
 
 from __future__ import annotations
 
+import os
+import sys
 import time
 from pathlib import Path
 
@@ -20,6 +22,10 @@ from ..config import ProjectConfig
 from .base import CaseResult, MaterialInfo
 
 START_TIMEOUT_S = 90  # license checkout on first start can be slow
+
+# Set GEOSURROGATE_MODE=demo to force demo mode regardless of the host (the
+# container/public demo does this: offering RS2 there would only ever fail).
+MODE_ENV = "GEOSURROGATE_MODE"
 
 
 class RS2NotAvailable(RuntimeError):
@@ -43,6 +49,35 @@ def _import_rs2():
             "pip install RS2Scripting==11.28.0"
         ) from e
     return RS2Modeler, RS2Interpreter, MaterialType, StrengthCriteriaTypes
+
+
+def rs2_supported_platform() -> bool:
+    """Whether RS2 could ever be driven from this environment.
+
+    False in a Linux container or when demo mode is forced: RS2 is licensed
+    Windows software that the adapter reaches as a local process, so there no
+    amount of installing RS2Scripting would help. Callers use this to hide the
+    RS2 path outright instead of advertising one that cannot work.
+    """
+    if os.environ.get(MODE_ENV, "").strip().lower() == "demo":
+        return False
+    return sys.platform == "win32"
+
+
+def rs2_available() -> bool:
+    """Whether RS2 can actually be driven right now (platform *and* package).
+
+    A supported platform with the package missing is recoverable — the user can
+    install the RS2Scripting build matching their RS2 — which is why that case
+    is kept distinct from `rs2_supported_platform`.
+    """
+    if not rs2_supported_platform():
+        return False
+    try:
+        _import_rs2()
+    except RS2NotAvailable:
+        return False
+    return True
 
 
 def _extract_materials(model) -> list[MaterialInfo]:

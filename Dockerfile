@@ -4,8 +4,8 @@
 # build time, so every runtime start is instant instead of fighting a cold-boot
 # compile. This image runs the DEMO path only — the real RS2 workflow needs a
 # licensed RS2 on a local Windows machine and cannot run in a container
-# (see ARQUITECTURA.md). The .fez upload / RS2 pages will be inert here; hiding
-# them is a later "demo-web preset" step, not part of this base image.
+# (see ARQUITECTURA.md). GEOSURROGATE_MODE=demo below makes the app hide the
+# RS2 journey instead of offering a path that could only fail here.
 
 FROM python:3.11-slim-bookworm
 
@@ -50,6 +50,7 @@ RUN python -m pip install --upgrade pip \
 # The STREAMLIT_* vars make the server reachable from outside the container and
 # stop it trying to open a browser or phone home.
 ENV GEOSURROGATE_RSCRIPT=Rscript \
+    GEOSURROGATE_MODE=demo \
     STREAMLIT_SERVER_ADDRESS=0.0.0.0 \
     STREAMLIT_SERVER_HEADLESS=true \
     STREAMLIT_BROWSER_GATHER_USAGE_STATS=false

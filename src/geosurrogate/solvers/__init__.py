@@ -5,8 +5,11 @@ from __future__ import annotations
 from ..config import ProjectConfig
 from .base import CaseResult, FEMSolver, MaterialInfo
 from .demo import DemoSolver
+# Safe to import eagerly: rs2.py only imports RS2Scripting inside _import_rs2().
+from .rs2 import rs2_available, rs2_supported_platform
 
-__all__ = ["CaseResult", "FEMSolver", "MaterialInfo", "DemoSolver", "get_solver"]
+__all__ = ["CaseResult", "FEMSolver", "MaterialInfo", "DemoSolver", "get_solver",
+           "rs2_available", "rs2_supported_platform"]
 
 
 def get_solver(config: ProjectConfig) -> FEMSolver:
