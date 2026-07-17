@@ -257,6 +257,45 @@ def report_cmd(project_dir: Path = typer.Argument(..., help="Existing project fo
     typer.echo(f"Report: {path}")
 
 
+@app.command("detect-rs2")
+def detect_rs2_cmd(
+    check_pypi: bool = typer.Option(
+        False, "--check-pypi",
+        help="Resolve the exact latest patch published on PyPI (needs network).")
+) -> None:
+    """Detect installed RS2 and the RS2Scripting version it needs.
+
+    Reads the Windows registry — the same source RS2Scripting uses to locate
+    RS2 — so the pip requirement is derived, not hand-maintained. Windows only.
+    """
+    from .rs2_detect import (detect_rs2_installations, fetch_pypi_versions,
+                             select_pypi_version)
+
+    installs = detect_rs2_installations()
+    if not installs:
+        typer.echo("No RS2 installation found in the Windows registry.")
+        typer.echo("(RS2 detection is Windows-only and needs RS2 installed.)")
+        raise typer.Exit(code=1)
+
+    available = fetch_pypi_versions() if check_pypi else []
+    for inst in installs:
+        typer.echo(f"RS2 {inst.version}  (generation {inst.generation})")
+        typer.echo(f"  install         : {inst.install_path or '-'}")
+        typer.echo(f"  scripting ready : {'yes' if inst.python_installed else 'NO'}")
+        typer.echo(f"  needs           : {inst.scripting_spec}")
+        typer.echo(f"  install with    : {inst.pip_command}")
+        if check_pypi:
+            exact = select_pypi_version(available, inst.version)
+            if exact:
+                typer.echo(f"  latest on PyPI  : RS2Scripting=={exact}")
+            else:
+                typer.echo("  latest on PyPI  : no matching minor published "
+                           "(install the nearest available version manually)")
+        if not inst.python_installed:
+            typer.echo("  warning: RS2's Python scripting component is not "
+                       "installed — enable it in the RS2 installer first.")
+
+
 @app.command("ui")
 def ui_cmd(port: int = typer.Option(8501, help="Dashboard port")) -> None:
     """Launch the Streamlit dashboard."""
