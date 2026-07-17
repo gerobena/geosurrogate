@@ -45,18 +45,32 @@ class RS2Install:
         return f'pip install "{self.scripting_spec}"'
 
 
-def scripting_spec_for(version: str) -> str:
-    """Map an RS2 build string to a pip requirement for RS2Scripting.
+def scripting_target(version: str) -> tuple[int, int]:
+    """The (major, minor) that RS2Scripting must match for this RS2 build.
 
-    The build's major.minor drives it; the zero-padded minor is read as an int,
-    so "11.028" -> "RS2Scripting==11.28.*" (latest patch of that minor). Raises
-    ValueError if the string is not <major>.<minor>[...] with numeric parts.
+    The zero-padded build minor is read as an int, so "11.028" -> (11, 28).
+    Works on both registry build strings and installed package versions (extra
+    components are ignored). Raises ValueError on non-numeric major/minor.
     """
     parts = version.strip().split(".")
     if len(parts) < 2 or not (parts[0].isdigit() and parts[1].isdigit()):
         raise ValueError(f"unrecognized RS2 version string: {version!r}")
-    major, minor = int(parts[0]), int(parts[1])
+    return int(parts[0]), int(parts[1])
+
+
+def scripting_spec_for(version: str) -> str:
+    """pip requirement for RS2Scripting given an RS2 build, e.g. 'RS2Scripting==11.28.*'."""
+    major, minor = scripting_target(version)
     return f"RS2Scripting=={major}.{minor}.*"
+
+
+def installed_scripting_version() -> str | None:
+    """Version of RS2Scripting installed in the current environment, or None."""
+    from importlib.metadata import PackageNotFoundError, version
+    try:
+        return version("RS2Scripting")
+    except PackageNotFoundError:
+        return None
 
 
 def select_pypi_version(available: list[str], version: str) -> str | None:
@@ -66,10 +80,7 @@ def select_pypi_version(available: list[str], version: str) -> str | None:
     x.y equals the build's major.minor, or None if that minor was never
     published (the caller then warns instead of failing silently).
     """
-    parts = version.strip().split(".")
-    if len(parts) < 2 or not (parts[0].isdigit() and parts[1].isdigit()):
-        raise ValueError(f"unrecognized RS2 version string: {version!r}")
-    target = (int(parts[0]), int(parts[1]))
+    target = scripting_target(version)
 
     def _key(v: str) -> tuple[int, int, int] | None:
         m = re.match(r"^(\d+)\.(\d+)\.(\d+)$", v)

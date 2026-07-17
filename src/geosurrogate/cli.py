@@ -296,6 +296,62 @@ def detect_rs2_cmd(
                        "installed — enable it in the RS2 installer first.")
 
 
+@app.command("setup-rs2")
+def setup_rs2_cmd(
+    dry_run: bool = typer.Option(
+        False, "--dry-run", help="Show the pip command without running it."),
+    yes: bool = typer.Option(
+        False, "--yes", "-y", help="Do not ask for confirmation before installing."),
+) -> None:
+    """Install the RS2Scripting version matching the installed RS2.
+
+    Detects RS2 in the registry, derives the required RS2Scripting, and installs
+    it into the current environment with pip. Idempotent: if a matching version
+    is already installed it does nothing. Windows only.
+    """
+    import subprocess
+    import sys
+
+    from .rs2_detect import (detect_rs2_installations, installed_scripting_version,
+                             scripting_target)
+
+    installs = detect_rs2_installations()
+    if not installs:
+        typer.echo("No RS2 installation found in the Windows registry.")
+        typer.echo("Install RS2 (Windows, licensed) first, then re-run this.")
+        raise typer.Exit(code=1)
+
+    inst = installs[0]  # newest build
+    if len(installs) > 1:
+        others = ", ".join(i.version for i in installs[1:])
+        typer.echo(f"Multiple RS2 generations found; using RS2 {inst.version} "
+                   f"(also present: {others}).")
+    if not inst.python_installed:
+        typer.echo(f"warning: RS2 {inst.version} reports its Python scripting "
+                   "component is not installed. RS2Scripting will install, but "
+                   "the connection will fail until you enable that component in "
+                   "the RS2 installer.")
+
+    target = scripting_target(inst.version)
+    current = installed_scripting_version()
+    if current is not None and scripting_target(current) == target:
+        typer.echo(f"RS2Scripting {current} already matches RS2 {inst.version} "
+                   f"(needs {target[0]}.{target[1]}.x). Nothing to do.")
+        return
+    if current is not None:
+        typer.echo(f"RS2Scripting {current} is installed but does not match "
+                   f"RS2 {inst.version}; it will be replaced.")
+
+    cmd = [sys.executable, "-m", "pip", "install", inst.scripting_spec]
+    typer.echo(f"RS2 {inst.version} -> {inst.pip_command}")
+    if dry_run:
+        typer.echo("(dry run — nothing installed)")
+        return
+    if not yes and not typer.confirm("Proceed with the install?", default=True):
+        raise typer.Exit(code=1)
+    raise SystemExit(subprocess.call(cmd))
+
+
 @app.command("ui")
 def ui_cmd(port: int = typer.Option(8501, help="Dashboard port")) -> None:
     """Launch the Streamlit dashboard."""
