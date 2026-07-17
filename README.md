@@ -75,7 +75,21 @@ evaluation, not a FEM run:
 
 ![Monte Carlo simulation of SRF with failure threshold and PoF](assets/monte-carlo-pof.png)
 
-## Quickstart — demo mode (no RS2 license required)
+## Try the demo in one command (Docker)
+
+The published image bundles Python, R and deepgp, so nothing else needs
+installing. It runs the **demo cases** (real precomputed RS2 results) — no RS2
+license required:
+
+```bash
+docker run --pull=always -p 8501:8501 ghcr.io/gerobena/geosurrogate:latest
+```
+
+Then open **http://localhost:8501**. (The real RS2 workflow is intentionally
+hidden in this image — it needs a licensed RS2 on a local Windows machine; see
+below.)
+
+## Quickstart from source — demo mode (no RS2 license required)
 
 ```bash
 python -m venv .venv

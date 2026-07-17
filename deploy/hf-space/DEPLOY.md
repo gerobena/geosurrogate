@@ -1,5 +1,13 @@
 # Deploying the public demo to a HuggingFace Space
 
+> **Note (2026):** HuggingFace now requires a **paid PRO plan** to create Docker
+> (and Gradio) Spaces — only Static Spaces stay free, and those cannot run this
+> app. The free, no-account way to let anyone try the demo is the one-command
+> Docker run documented in the main README (the GHCR image is public). Keep this
+> file as a reference for standing up a hosted Space if you later take PRO or
+> move to another container host (e.g. Google Cloud Run, which runs the same
+> public image and scales to zero).
+
 The Space reuses the image published to GHCR by the `Docker image` workflow, so
 there is nothing to compile here. These are the one-time steps to stand it up.
 Steps 1–3 need your GitHub/HuggingFace accounts, so they are yours to do; the
