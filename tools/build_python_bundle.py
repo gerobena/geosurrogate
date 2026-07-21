@@ -137,7 +137,7 @@ def main() -> int:
     # Clean only what this script owns (leave a sibling dist/R intact).
     if pydir.exists():
         shutil.rmtree(pydir)
-    for name in COPY_INTO_ROOT:
+    for name in (*COPY_INTO_ROOT, "launcher.py"):
         target = dist / name
         if target.is_dir():
             shutil.rmtree(target)
@@ -160,6 +160,8 @@ def main() -> int:
             shutil.copytree(src, dstp)
         else:
             shutil.copy2(src, dstp)
+    # The shortcut runs this; it must sit at the install root, beside python/.
+    shutil.copy2(REPO / "installer" / "launcher.py", dist / "launcher.py")
 
     log("Smoke test: rendering the dashboard from the bundle...")
     smoke_test(dist)
