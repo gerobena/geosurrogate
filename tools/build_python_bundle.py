@@ -160,8 +160,15 @@ def main() -> int:
             shutil.copytree(src, dstp)
         else:
             shutil.copy2(src, dstp)
-    # The shortcut runs this; it must sit at the install root, beside python/.
-    shutil.copy2(REPO / "installer" / "launcher.py", dist / "launcher.py")
+    # The desktop shortcut runs this; it must sit at the install root, beside
+    # python/. It lives in installer/, which is not part of the public repo (the
+    # native .exe is distributed by the author), so its absence is not an error:
+    # the bundle still runs via `python\python.exe -m streamlit run app\Home.py`.
+    launcher = REPO / "installer" / "launcher.py"
+    if launcher.exists():
+        shutil.copy2(launcher, dist / "launcher.py")
+    else:
+        log("  (no installer/launcher.py — bundle built without the shortcut entry point)")
 
     log("Smoke test: rendering the dashboard from the bundle...")
     smoke_test(dist)

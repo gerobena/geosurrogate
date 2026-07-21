@@ -27,3 +27,7 @@ Thumbs.db
 # Local project-memory / working notes (kept out of the public repo)
 CLAUDE.md
 ESTADO.md
+
+# Native installer packaging: the .exe is distributed by the author, not built
+# from the public repo (the bundle build scripts in tools/ remain public).
+installer/
