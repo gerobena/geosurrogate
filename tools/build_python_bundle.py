@@ -35,7 +35,10 @@ import zipfile
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
-COPY_INTO_ROOT = ("src", "app", "demo_cases", "pyproject.toml", "README.md")
+COPY_INTO_ROOT = ("src", "app", "demo_cases", "pyproject.toml", "README.md",
+                  # Licence texts travel with the payload: the bundled R is GPL
+                  # and NOTICE.md carries the source offer and the inventory.
+                  "LICENSE", "NOTICE.md")
 
 
 def log(msg: str) -> None:
