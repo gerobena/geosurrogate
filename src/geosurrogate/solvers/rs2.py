@@ -14,6 +14,7 @@ version that corresponds to the user's RS2: pip install RS2Scripting==<ver>.
 from __future__ import annotations
 
 import os
+import subprocess
 import sys
 import time
 from pathlib import Path
@@ -80,6 +81,72 @@ def rs2_available() -> bool:
     return True
 
 
+# --- process lifecycle ------------------------------------------------------
+# RS2Scripting's closeProgram() sends the close request and then busy-waits for
+# the port to free, raising TimeoutError after 30 s. Swallowing that leaves an
+# orphan RS2 holding 60054/60055 and the *next* run dies with an unexplained
+# "port is occupied". So every close is verified, and anything we started that
+# survives is terminated BY PID — never by image name, which would also kill the
+# user's own RS2 session.
+
+def _rs2_process_ids() -> set[int]:
+    """PIDs of live RS2 / Interpret processes (Windows only)."""
+    if sys.platform != "win32":
+        return set()
+    pids: set[int] = set()
+    for image in ("RS2.exe", "Interpret.exe"):
+        try:
+            out = subprocess.run(
+                ["tasklist", "/FI", f"IMAGENAME eq {image}", "/FO", "CSV", "/NH"],
+                capture_output=True, text=True, timeout=20).stdout
+        except Exception:
+            continue
+        for line in out.splitlines():
+            fields = [f.strip('"') for f in line.split('","')]
+            if len(fields) >= 2 and fields[1].isdigit():
+                pids.add(int(fields[1]))
+    return pids
+
+
+def _force_close(pids: set[int]) -> list[int]:
+    """Terminate exactly these PIDs. Returns the ones actually killed."""
+    killed = []
+    for pid in sorted(pids):
+        res = subprocess.run(["taskkill", "/PID", str(pid), "/F"],
+                             capture_output=True, text=True)
+        if res.returncode == 0:
+            killed.append(pid)
+    return killed
+
+
+def _close_app(app, label: str) -> None:
+    """closeProgram without letting a failure pass unnoticed."""
+    try:
+        app.closeProgram(False)
+    except TypeError:  # older signature without the saveModels flag
+        try:
+            app.closeProgram()
+        except Exception as e:
+            print(f"warning: {label} closeProgram failed: {e!r}", flush=True)
+    except Exception as e:
+        print(f"warning: {label} did not close cleanly: {e!r}", flush=True)
+
+
+def _reap(owned: set[int], label: str) -> None:
+    """Kill leftovers among the instances we started, and say so."""
+    leftover = owned & _rs2_process_ids()
+    if not leftover:
+        return
+    killed = _force_close(leftover)
+    if killed:
+        print(f"warning: {label} stayed open after closeProgram; force-closed "
+              f"PID(s) {killed} to free the RS2 ports", flush=True)
+    else:
+        print(f"warning: {label} is still running (PID(s) {sorted(leftover)}) and "
+              f"could not be closed; close it manually or the next RS2 run will "
+              f"fail with 'port is occupied'", flush=True)
+
+
 def _extract_materials(model) -> list[MaterialInfo]:
     out = []
     for i, mat in enumerate(model.getAllMaterialProperties()):
@@ -109,6 +176,7 @@ def discover_materials(model_path: Path, port: int = 60054,
     model_path = Path(model_path).resolve()
     if not model_path.exists():
         raise FileNotFoundError(f"FEM model not found: {model_path}")
+    before = _rs2_process_ids()
     try:
         RS2Modeler.startApplication(
             port=port,
@@ -117,10 +185,12 @@ def discover_materials(model_path: Path, port: int = 60054,
             timeout=START_TIMEOUT_S)
         modeler = RS2Modeler(port=port)
     except (FileNotFoundError, TimeoutError, RuntimeError) as e:
+        _reap(_rs2_process_ids() - before, "RS2 Modeler")
         raise RS2ConnectionError(
             f"{e} - check that RS2 is installed and licensed, that port {port} "
             f"is free (close stale RS2/Interpret processes), or set an "
             f"executable override.") from e
+    owned = _rs2_process_ids() - before
     try:
         model = modeler.openFile(str(model_path))
         try:
@@ -128,10 +198,10 @@ def discover_materials(model_path: Path, port: int = 60054,
         finally:
             model.close()
     finally:
-        try:
-            modeler.closeProgram(False)
-        except Exception:
-            pass
+        # Leaving this instance alive would block the very next step (training
+        # reuses the same port), which is exactly what used to happen.
+        _close_app(modeler, "RS2 Modeler")
+        _reap(owned, "RS2 Modeler")
 
 
 class RS2Solver:
@@ -147,10 +217,12 @@ class RS2Solver:
         self._varmap = {v.id: (v.material, v.property) for v in config.variables}
         self._modeler = None
         self._interpreter = None
+        self._owned_pids: set[int] = set()
 
     # --- lifecycle --------------------------------------------------------
     def connect(self) -> None:
         s = self.config.solver
+        before = _rs2_process_ids()
         try:
             self._RS2Modeler.startApplication(
                 port=s.ports.modeler,
@@ -164,19 +236,24 @@ class RS2Solver:
                                           if s.rs2_interpreter_executable else None),
                 timeout=START_TIMEOUT_S)
             self._interpreter = self._RS2Interpreter(port=s.ports.interpreter)
+            self._owned_pids = _rs2_process_ids() - before
         except FileNotFoundError as e:
+            # A partial start (Modeler up, Interpreter failed) must not leak.
+            _reap(_rs2_process_ids() - before, "RS2")
             raise RS2ConnectionError(
                 "RS2 installation not found via the Windows registry. Is RS2 "
                 "installed? On non-standard installs, set solver."
                 "rs2_modeler_executable / rs2_interpreter_executable in "
                 "project.yaml.") from e
         except TimeoutError as e:
+            _reap(_rs2_process_ids() - before, "RS2")
             raise RS2ConnectionError(
                 f"RS2 did not become ready within {START_TIMEOUT_S}s. Check "
                 f"that the license is available and that ports "
                 f"{s.ports.modeler}/{s.ports.interpreter} are free (close "
                 f"stale RS2 instances or change solver.ports).") from e
         except RuntimeError as e:
+            _reap(_rs2_process_ids() - before, "RS2")
             # RS2Scripting raises a plain RuntimeError when the port is taken,
             # typically by RS2/Interpret instances left behind by an aborted
             # run (Ctrl+C kills Python before its shutdown() runs).
@@ -186,20 +263,16 @@ class RS2Solver:
                 f"different ports in solver.ports of project.yaml.") from e
 
     def shutdown(self) -> None:
-        for app in (self._modeler, self._interpreter):
-            if app is None:
-                continue
-            try:
-                app.closeProgram(False)
-            except TypeError:
-                try:
-                    app.closeProgram()
-                except Exception:
-                    pass
-            except Exception:
-                pass
+        for app, label in ((self._modeler, "RS2 Modeler"),
+                           (self._interpreter, "RS2 Interpreter")):
+            if app is not None:
+                _close_app(app, label)
         self._modeler = None
         self._interpreter = None
+        # Verify: a closeProgram that timed out leaves the port held, and the
+        # next run (or the user's next click) would fail with "port occupied".
+        _reap(self._owned_pids, "RS2")
+        self._owned_pids = set()
 
     # --- discovery --------------------------------------------------------
     def list_materials(self) -> list[MaterialInfo]:
