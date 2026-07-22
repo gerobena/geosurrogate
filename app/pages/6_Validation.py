@@ -7,7 +7,7 @@ import streamlit as st
 from geosurrogate.activelearning import runner
 from geosurrogate.ui.common import (current_project, init_page, launch_cli,
                                     load_json, running_stage, show_image,
-                                    stage_progress_bar, t, tail_file)
+                                    log_panel, stage_progress_bar, t)
 
 init_page("val.title")
 project = current_project()
@@ -134,9 +134,7 @@ if project:
                     if stop_col.button(t("val.testset_stop"), key="stop_testset"):
                         runner.request_stop(project.root)
                         st.warning(t("val.testset_stopping"))
-                    log = tail_file(project.root / "log" / "testset.out", 4)
-                    if log:
-                        st.code(log)
+                    log_panel(project.root / "log" / "testset.out", 4)
 
         # --- massive validation -----------------------------------------------
         with st.container(border=True):
@@ -184,9 +182,7 @@ if project:
                                      "--ks", *source_args], "validate")
                 st.info(t("val.launched"))
 
-        log = tail_file(project.root / "log" / "validate.out")
-        if log:
-            with st.expander(t("val.log")):
-                st.code(log)
+        with st.expander(t("val.log")):
+            log_panel(project.root / "log" / "validate.out")
 
     live_validation()

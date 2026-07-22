@@ -131,6 +131,39 @@ def tail_file(path: Path, n: int = 15) -> str:
     return "\n".join(lines[-n:])
 
 
+def _human_age(seconds: float) -> str:
+    if seconds < 90:
+        return f"{int(seconds)} s"
+    if seconds < 5400:
+        return f"{int(seconds // 60)} min"
+    if seconds < 172800:
+        return f"{int(seconds // 3600)} h"
+    return f"{int(seconds // 86400)} d"
+
+
+def log_panel(path: Path, n: int = 15, stale_after_s: int = 600) -> None:
+    """Render a log tail, always stating how old it is.
+
+    Undated output reads as current: opening a project left half-finished the
+    day before showed its last 'port is occupied' error as though the port were
+    occupied right then. The age turns that into obvious history.
+    """
+    text = tail_file(path, n)
+    if not text:
+        return
+    import datetime as dt
+    import time
+
+    mtime = path.stat().st_mtime
+    when = dt.datetime.fromtimestamp(mtime).strftime("%Y-%m-%d %H:%M")
+    age = time.time() - mtime
+    if age > stale_after_s:
+        st.caption(t("common.log_old", when=when, age=_human_age(age)))
+    else:
+        st.caption(t("common.log_recent", when=when))
+    st.code(text)
+
+
 # --- stage-based progress (single long R call: MCS, massive validation) ------
 STAGE_FRACTION = {"sampling": 0.08, "predicting": 0.55, "finalizing": 0.92}
 

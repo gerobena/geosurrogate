@@ -2,7 +2,7 @@ import pandas as pd
 import streamlit as st
 
 from geosurrogate.ui.common import (current_project, init_page, launch_cli, t,
-                                    tail_file)
+                                    log_panel)
 from geosurrogate.solvers.demo import demo_cases_dir, load_registry
 
 init_page("model.title")
@@ -41,9 +41,7 @@ if project:
                     args.append("--simulate")
                 launch_cli(project, args, "check")
                 st.info(t("val.launched"))
-            log = tail_file(project.root / "log" / "check.out", 25)
-            if log:
-                st.code(log)
+            log_panel(project.root / "log" / "check.out", 25)
 
         preflight_block()
 

@@ -143,5 +143,7 @@
   "model.preflight": "Preflight",
   "model.preflight_note": "Conecta con RS2, comprueba que las variables configuradas existen en el modelo y (opcional) corre una simulacion de humo cronometrada. Ejecutalo antes de entrenar.",
   "model.preflight_smoke": "Incluir una simulacion de humo (mide el tiempo FEM)",
-  "model.preflight_run": "Ejecutar preflight"
+  "model.preflight_run": "Ejecutar preflight",
+  "common.log_old": "Log de una ejecucion anterior: {when} (hace {age}). No refleja el estado actual.",
+  "common.log_recent": "Log: {when}"
 }
