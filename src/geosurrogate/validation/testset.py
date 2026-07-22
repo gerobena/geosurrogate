@@ -20,6 +20,8 @@ from .. import doe
 from ..project import Project
 from ..solvers import get_solver
 
+MAX_CONSECUTIVE_FAILURES = 3  # same guard the active-learning loop uses
+
 
 def generate_testset(project: Project, n: int, seed: int,
                      dry_run: bool = False) -> Path:
@@ -49,9 +51,19 @@ def generate_testset(project: Project, n: int, seed: int,
     if start:
         project.log(f"testset: resuming, {start}/{n} already simulated")
 
+    # A stop request left over from a previous batch must not abort this one.
+    project.clear_control()
     solver.connect()
+    stopped = ""
+    failures = 0
     try:
         for i in range(start, n):
+            # Checked between cases: a batch is hours of FEM time, and killing
+            # the process mid-simulation would leave RS2 holding its ports.
+            if project.pause_requested():
+                stopped = "stopped on request"
+                project.log(f"testset: {stopped} at {i}/{n} - relaunch to resume")
+                break
             assignments = {v: float(inputs.iloc[i][v]) for v in cfg.var_ids}
             case_id = f"Test_{i + 1:04d}"
             result = solver.run_case(assignments, project.fem_dir / "testset", case_id)
@@ -69,12 +81,25 @@ def generate_testset(project: Project, n: int, seed: int,
                         f"({result.status})")
             if result.message:
                 project.log(f"    failure detail: {result.message}")
+            # Without this, a broken RS2 (or one closed by hand mid-batch) burns
+            # through every remaining case failing the same way.
+            if result.status != "ok":
+                failures += 1
+                if failures >= MAX_CONSECUTIVE_FAILURES:
+                    stopped = f"stopped after {failures} consecutive FEM failures"
+                    project.log(f"testset: {stopped} - check RS2, then relaunch "
+                                f"to resume")
+                    break
+            else:
+                failures = 0
     finally:
         solver.shutdown()
+        project.clear_control()
 
     ok = done[done["status"] == "ok"]
     ok[[*cfg.var_ids, "srf"]].to_excel(final_path, index=False)
-    project.log(f"testset complete: {len(ok)}/{n} valid FEM results -> {final_path}")
+    state = stopped or "complete"
+    project.log(f"testset {state}: {len(ok)}/{n} valid FEM results -> {final_path}")
     project.append_event("testset_done", n_requested=n, n_ok=int(len(ok)),
-                         file=str(final_path))
+                         stopped=stopped or None, file=str(final_path))
     return final_path

@@ -24,3 +24,14 @@ def launch_detached(project_root: Path | str) -> int:
 def request_pause(project_root: Path | str) -> None:
     control = Path(project_root) / "control.json"
     control.write_text(json.dumps({"request": "pause"}), encoding="utf-8")
+
+
+def request_stop(project_root: Path | str) -> None:
+    """Ask the running job to stop at the next case boundary.
+
+    Same file-based channel as the pause request (Project.pause_requested()
+    honours both), so a long batch can be called off without killing the
+    process mid-simulation and leaving RS2 orphaned on its ports.
+    """
+    control = Path(project_root) / "control.json"
+    control.write_text(json.dumps({"request": "stop"}), encoding="utf-8")

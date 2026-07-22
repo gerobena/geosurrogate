@@ -1,8 +1,10 @@
 import datetime as dt
+import re
 
 import pandas as pd
 import streamlit as st
 
+from geosurrogate.activelearning import runner
 from geosurrogate.ui.common import (current_project, init_page, launch_cli,
                                     load_json, running_stage, show_image,
                                     stage_progress_bar, t, tail_file)
@@ -112,14 +114,26 @@ if project:
                     st.caption(t("val.testset_note"))
                     for p in sorted(val_dir.glob("testset_*_partial.csv")):
                         done = len(pd.read_csv(p))
-                        st.progress(min(done / 80, 1.0),
+                        # Total comes from the file name, not a hardcoded 80.
+                        m = re.search(r"testset_n(\d+)_", p.name)
+                        total = int(m.group(1)) if m else max(done, 1)
+                        st.progress(min(done / total, 1.0),
                                     text=t("val.testset_progress", done=done,
                                            name=p.name))
-                    n = st.number_input("n", min_value=10, max_value=500, value=80)
-                    if st.button(t("val.testset_run"), key="run_testset"):
+                    # An explicit key is essential: this page auto-refreshes every
+                    # 3 s and its elements come and go, so an unkeyed widget gets a
+                    # new generated id and silently resets to the default - which
+                    # is how a batch launched with 80 after the user asked for 5.
+                    n = st.number_input("n", min_value=1, max_value=500, value=80,
+                                        key="testset_n")
+                    run_col, stop_col = st.columns(2)
+                    if run_col.button(t("val.testset_run"), key="run_testset"):
                         launch_cli(project, ["testset", str(project.root),
                                              "--n", str(int(n))], "testset")
-                        st.info(t("val.launched"))
+                        st.info(t("val.testset_launched", n=int(n)))
+                    if stop_col.button(t("val.testset_stop"), key="stop_testset"):
+                        runner.request_stop(project.root)
+                        st.warning(t("val.testset_stopping"))
                     log = tail_file(project.root / "log" / "testset.out", 4)
                     if log:
                         st.code(log)
