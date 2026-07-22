@@ -118,10 +118,20 @@ def load_json(path: Path) -> dict | None:
 
 
 def show_image(path: Path) -> bool:
-    if path.exists():
+    """Render a figure, tolerating one caught mid-write.
+
+    The pages auto-refresh every few seconds while a background job is still
+    writing its PNGs, so a read can land on a half-flushed file and PIL raises
+    UnidentifiedImageError. That is a transient state, not an error worth
+    crashing the page over: skip it and let the next refresh pick it up.
+    """
+    if not path.exists() or path.stat().st_size == 0:
+        return False
+    try:
         st.image(str(path), width="stretch")
-        return True
-    return False
+    except Exception:
+        return False
+    return True
 
 
 def tail_file(path: Path, n: int = 15) -> str:

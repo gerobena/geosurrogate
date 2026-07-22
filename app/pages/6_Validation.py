@@ -9,6 +9,10 @@ from geosurrogate.ui.common import (current_project, init_page, launch_cli,
                                     load_json, running_stage, show_image,
                                     log_panel, stage_progress_bar, t)
 
+# Below this many independent FEM results the two-sample K-S carries no useful
+# resolution (D quantised to 1/n) nor power; the paired R2/RMSE still do.
+KS_MIN_USEFUL_N = 30
+
 init_page("val.title")
 project = current_project()
 if project:
@@ -171,6 +175,15 @@ if project:
                 cols[0].metric("final D", f"{m['final_D']:.4f}")
                 cols[1].metric("final p-value", f"{m['final_pvalue']:.3f}")
                 cols[2].metric("n range", f"{m['n_min']} - {m['n_max']}")
+                # A two-sample D can only land on multiples of 1/n_test, so a
+                # small independent set puts a floor under it and strips the
+                # p-value of power. Say so rather than let 0.2000 / 1.000 read
+                # as a finding.
+                n_test = m.get("n_test")
+                if n_test and n_test < KS_MIN_USEFUL_N:
+                    st.warning(t("val.ks_underpowered", n=n_test,
+                                 res=f"{1.0 / n_test:.3f}",
+                                 rec=KS_MIN_USEFUL_N))
                 show_image(val_dir / "ks_curve.png")
             if prog:
                 _progress_bar(prog)

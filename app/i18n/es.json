@@ -145,5 +145,6 @@
   "model.preflight_smoke": "Incluir una simulacion de humo (mide el tiempo FEM)",
   "model.preflight_run": "Ejecutar preflight",
   "common.log_old": "Log de una ejecucion anterior: {when} (hace {age}). No refleja el estado actual.",
-  "common.log_recent": "Log: {when}"
+  "common.log_recent": "Log: {when}",
+  "val.ks_underpowered": "Solo {n} resultados FEM independientes: el D de dos muestras solo puede tomar multiplos de 1/{n} = {res}, asi que la curva no tiene resolucion por debajo de eso y el p-valor casi no tiene potencia. No lo leas como acuerdo ni desacuerdo: es inconcluyente. Usa del orden de {rec}+ resultados (regla practica: 2-3x el tamano del entrenamiento) para un K-S concluyente. El R2/RMSE pareado de arriba si es valido con este tamano."
 }

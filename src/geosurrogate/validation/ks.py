@@ -70,7 +70,12 @@ def run_ks_curve(project: Project, test_xlsx: Path | None = None,
     curve.to_csv(out_dir / "ks_curve.csv", index=False)
 
     final = rows[-1]
-    metrics = {"n_min": n_min, "n_max": n_total,
+    # n_test drives how much the statistic can even say: a two-sample D is
+    # quantised to multiples of 1/n_test, so a small independent set puts a
+    # floor under D and leaves the p-value with no power. Recorded so the
+    # dashboard and the report can state that instead of implying a verdict.
+    metrics = {"n_min": n_min, "n_max": n_total, "n_test": int(len(test)),
+               "d_resolution": 1.0 / len(test),
                "final_D": final["ks_D"], "final_pvalue": final["ks_pvalue"],
                "final_h0_rejected_at_005": final["ks_pvalue"] < 0.05}
     (out_dir / "ks_metrics.json").write_text(json.dumps(metrics, indent=1),

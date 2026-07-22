@@ -145,5 +145,6 @@
   "model.preflight_smoke": "Include one smoke simulation (measures FEM time)",
   "model.preflight_run": "Run preflight",
   "common.log_old": "Log from an earlier run - {when} ({age} ago). It does not reflect the current state.",
-  "common.log_recent": "Log - {when}"
+  "common.log_recent": "Log - {when}",
+  "val.ks_underpowered": "Only {n} independent FEM results: the two-sample D can only take multiples of 1/{n} = {res}, so the curve has no resolution below that and the p-value has almost no power. Do not read this as agreement or disagreement - it is inconclusive. Use around {rec}+ results (rule of thumb: 2-3x the training size) for a conclusive K-S. The paired R2/RMSE above remain valid at this size."
 }
