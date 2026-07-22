@@ -12,7 +12,9 @@ from pathlib import Path
 def launch_detached(project_root: Path | str) -> int:
     """Start `geosurrogate run <project>` as a detached process; returns its PID."""
     root = Path(project_root)
-    log = open(root / "log" / "runner.out", "a", encoding="utf-8")
+    # Truncate per launch: this is the current run's console, not the archive
+    # (run.log and events.jsonl keep the history).
+    log = open(root / "log" / "runner.out", "w", encoding="utf-8")
     flags = subprocess.CREATE_NEW_PROCESS_GROUP if sys.platform == "win32" else 0
     proc = subprocess.Popen(
         [sys.executable, "-m", "geosurrogate.cli", "run", str(root)],

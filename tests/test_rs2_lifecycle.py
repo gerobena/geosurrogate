@@ -24,12 +24,17 @@ class FakeApp:
             raise self.fail
 
 
-def test_close_app_reports_a_timeout_instead_of_hiding_it(capsys):
-    app = FakeApp(fail=TimeoutError("did not close within the timeout"))
-    rs2._close_app(app, "RS2 Modeler")
-    out = capsys.readouterr().out
+def test_close_app_returns_the_reason_instead_of_hiding_it(capsys):
+    app = FakeApp(fail=RuntimeError("Please close all open dialogs."))
+    reason = rs2._close_app(app, "RS2 Modeler")
     assert app.close_calls == 1
-    assert "did not close cleanly" in out, "a failed close must be visible"
+    assert "open dialogs" in reason, "a refused close must surface its reason"
+    # Reporting belongs to _reap, so the refusal alone prints nothing.
+    assert capsys.readouterr().out == ""
+
+
+def test_close_app_is_quiet_when_it_works():
+    assert rs2._close_app(FakeApp(), "RS2 Modeler") == ""
 
 
 def test_close_app_falls_back_to_the_old_signature():
@@ -48,10 +53,13 @@ def test_reap_force_closes_only_the_pids_we_started(monkeypatch, capsys):
         return sorted(pids)
 
     monkeypatch.setattr(rs2, "_force_close", fake_force_close)
-    rs2._reap({111, 222}, "RS2")
+    rs2._reap({111, 222}, "RS2", "Please close all open dialogs")
 
     assert killed == [{111, 222}], "999 is the user's own RS2 and must survive"
-    assert "force-closed" in capsys.readouterr().out
+    out = capsys.readouterr().out
+    # Routine housekeeping: one calm line carrying the reason, not a warning.
+    assert out.count("\n") == 1 and not out.startswith("warning")
+    assert "closed PID(s) [111, 222]" in out and "open dialogs" in out
 
 
 def test_reap_is_silent_when_nothing_leaked(monkeypatch, capsys):

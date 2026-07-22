@@ -203,7 +203,10 @@ def launch_cli(project: Project, args: list[str], tag: str) -> int:
     """Run a geosurrogate CLI command detached; output goes to log/<tag>.out."""
     log_path = project.root / "log" / f"{tag}.out"
     log_path.parent.mkdir(parents=True, exist_ok=True)
-    log = open(log_path, "a", encoding="utf-8")
+    # Truncate: this file is the *current* run's console. Appending mixed the
+    # previous run's traceback into the panel, so a stale error looked live.
+    # The durable history stays in run.log and events.jsonl.
+    log = open(log_path, "w", encoding="utf-8")
     flags = subprocess.CREATE_NEW_PROCESS_GROUP if sys.platform == "win32" else 0
     proc = subprocess.Popen([sys.executable, "-m", "geosurrogate.cli", *args],
                             stdout=log, stderr=subprocess.STDOUT,

@@ -101,6 +101,34 @@ def test_gives_up_after_consecutive_fem_failures(monkeypatch, project):
         "a broken solver must not burn through the whole batch"
 
 
+def test_launching_starts_a_fresh_console_log(project, monkeypatch):
+    """The panel shows the *current* run, not a pile of previous ones.
+
+    Appending made a 14-hour-old traceback share the tail with today's output,
+    so an error from yesterday read as if it were happening now.
+    """
+    pytest.importorskip("streamlit")
+    from geosurrogate.ui import common
+
+    log_path = project.root / "log" / "testset.out"
+    log_path.parent.mkdir(parents=True, exist_ok=True)
+    log_path.write_text("RS2ConnectionError: port 60054 is occupied\n", encoding="utf-8")
+
+    started: list[list[str]] = []
+
+    class FakePopen:
+        def __init__(self, cmd, **kw):
+            started.append(cmd)
+            self.pid = 4321
+
+    monkeypatch.setattr(common.subprocess, "Popen", FakePopen)
+    common.launch_cli(project, ["testset", str(project.root), "--n", "5"], "testset")
+
+    assert "port 60054 is occupied" not in log_path.read_text(encoding="utf-8"), \
+        "the previous run's error must not survive into the new log"
+    assert started and started[0][-2:] == ["--n", "5"], "n must reach the CLI"
+
+
 def test_isolated_failures_do_not_stop_the_batch(monkeypatch, project):
     solver = FakeSolver(results=["ok", "fem_error", "ok", "fem_error", "ok"])
     _patch_solver(monkeypatch, solver)

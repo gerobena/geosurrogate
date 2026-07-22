@@ -119,32 +119,44 @@ def _force_close(pids: set[int]) -> list[int]:
     return killed
 
 
-def _close_app(app, label: str) -> None:
-    """closeProgram without letting a failure pass unnoticed."""
+def _close_app(app, label: str) -> str:
+    """Ask the app to close. Returns "" if it obeyed, else a short reason.
+
+    Nothing is printed here: RS2 routinely refuses ("Please close all open
+    dialogs before closing the program") and _reap then terminates it, so
+    shouting about the refusal *and* the cleanup would put two alarming lines
+    in the log for what is ordinary housekeeping.
+    """
     try:
         app.closeProgram(False)
     except TypeError:  # older signature without the saveModels flag
         try:
             app.closeProgram()
         except Exception as e:
-            print(f"warning: {label} closeProgram failed: {e!r}", flush=True)
+            return _reason(e)
     except Exception as e:
-        print(f"warning: {label} did not close cleanly: {e!r}", flush=True)
+        return _reason(e)
+    return ""
 
 
-def _reap(owned: set[int], label: str) -> None:
-    """Kill leftovers among the instances we started, and say so."""
+def _reason(e: Exception) -> str:
+    return str(e).strip().rstrip(".") or e.__class__.__name__
+
+
+def _reap(owned: set[int], label: str, reason: str = "") -> None:
+    """Terminate leftovers among the instances we started, in one calm line."""
     leftover = owned & _rs2_process_ids()
     if not leftover:
         return
     killed = _force_close(leftover)
+    detail = f" - {reason}" if reason else ""
     if killed:
-        print(f"warning: {label} stayed open after closeProgram; force-closed "
-              f"PID(s) {killed} to free the RS2 ports", flush=True)
+        print(f"{label}: kept the ports open, closed PID(s) {killed}{detail}",
+              flush=True)
     else:
         print(f"warning: {label} is still running (PID(s) {sorted(leftover)}) and "
-              f"could not be closed; close it manually or the next RS2 run will "
-              f"fail with 'port is occupied'", flush=True)
+              f"could not be closed{detail}; close it manually or the next RS2 "
+              f"run will fail with 'port is occupied'", flush=True)
 
 
 def _extract_materials(model) -> list[MaterialInfo]:
@@ -200,8 +212,7 @@ def discover_materials(model_path: Path, port: int = 60054,
     finally:
         # Leaving this instance alive would block the very next step (training
         # reuses the same port), which is exactly what used to happen.
-        _close_app(modeler, "RS2 Modeler")
-        _reap(owned, "RS2 Modeler")
+        _reap(owned, "RS2 Modeler", _close_app(modeler, "RS2 Modeler"))
 
 
 class RS2Solver:
@@ -263,15 +274,18 @@ class RS2Solver:
                 f"different ports in solver.ports of project.yaml.") from e
 
     def shutdown(self) -> None:
+        reasons: list[str] = []
         for app, label in ((self._modeler, "RS2 Modeler"),
                            (self._interpreter, "RS2 Interpreter")):
             if app is not None:
-                _close_app(app, label)
+                why = _close_app(app, label)
+                if why:
+                    reasons.append(why)
         self._modeler = None
         self._interpreter = None
-        # Verify: a closeProgram that timed out leaves the port held, and the
+        # Verify: a refused or timed-out close leaves the port held, and the
         # next run (or the user's next click) would fail with "port occupied".
-        _reap(self._owned_pids, "RS2")
+        _reap(self._owned_pids, "RS2", "; ".join(dict.fromkeys(reasons)))
         self._owned_pids = set()
 
     # --- discovery --------------------------------------------------------
